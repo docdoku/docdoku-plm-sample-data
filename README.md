@@ -8,4 +8,8 @@ DocdokuPLM server installed (refer to (this page)[https://github.com/docdoku/doc
 
 ## Instructions
  
-run loadSample.sh or loadSample.bat depending on your OS. Answer the questions and press ENTER.
+run loadSample.sh or loadSample.bat depending on your OS. Answer the questions if any and press ENTER.
+
+    ./loadSampe.sh [workspace] [login] [password]
+    
+
