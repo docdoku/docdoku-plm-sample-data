@@ -1,3 +1,2 @@
 #!/bin/bash
-
-java -classpath target/docdoku-sample-loader.jar:../docdoku-common/target/docdoku-common.jar:../docdoku-cli/target/docdoku-cli.jar com.docdoku.loaders.WorkspaceLoader $*
+mvn dependency:copy-dependencies && java -classpath target/docdoku-sample-loader.jar:target/dependency/docdoku-common-2.0-SNAPSHOT.jar:target/dependency/docdoku-cli-2.0-SNAPSHOT.jar com.docdoku.loaders.WorkspaceLoader $*
