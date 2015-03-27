@@ -1,0 +1,345 @@
+{
+  "LOV":[
+    {
+      "lovName":"DetailLevel",
+      "possibleValues":[
+        {
+          "name":"Overview",
+          "value":"0"
+        },
+        {
+          "name":"Detailed",
+          "value":"1"
+        }
+      ]
+    },
+    {
+      "lovName":"Color",
+      "possibleValues":[
+        {
+          "name":"Red",
+          "value":"#FF0000"
+        },
+        {
+          "name":"Blue",
+          "value":"#0000FF"
+        },
+        {
+          "name":"Green",
+          "value":"#00FF00"
+        },
+        {
+          "name":"White",
+          "value":"#FFFFFF"
+        },
+        {
+          "name":"Black",
+          "value":"#000000"
+        },
+        {
+          "name":"Yellow",
+          "value":"#FFFF00"
+        },
+        {
+          "name":"Cyan",
+          "value":"#00FFFF"
+        },
+        {
+          "name":"Pink",
+          "value":"#FF00FF"
+        },
+        {
+          "name":"Grey",
+          "value":"#808080"
+        }
+      ]
+    }
+  ],
+  "DOC":{
+    "templates":[
+      {
+        "id":"Bill",
+        "type":"Bill",
+        "mask":"Bill_########",
+        "attributesLocked":false,
+        "idGeneration":false,
+        "attributes":[
+          {
+            "name":"Client name",
+            "type":"TEXT",
+            "mandatory":true
+          },
+          {
+            "name":"TTC",
+            "type":"BOOLEAN",
+            "mandatory":false
+          }
+        ]
+      },
+      {
+        "id":"UserManual",
+        "type":"User Manual",
+        "mask":"",
+        "attributesLocked":true,
+        "idGeneration":false,
+        "attributes":[
+          {
+            "name":"Item",
+            "type":"TEXT",
+            "mandatory":true
+          },
+          {
+            "name":"Detail of the document",
+            "type":"LOV",
+            "lovName":"DetailLevel",
+            "mandatory":true
+          }
+        ]
+      }
+    ],
+    "folders":["Docs", "Accounting", "Share", "Returns", "Customers"],
+    "documents":[
+      {
+        "folder":"Docs",
+        "docID":"PLMInstall",
+        "docTemplate":"UserManual",
+        "docTitle":"PLM Install User Manual",
+        "docDescription":"Contains all necessary information to install the PLM on a server",
+        "documentLinks":[],
+        "attributes":[
+          {
+            "name":"Item",
+            "type":"TEXT",
+            "value":"PLM"
+          },
+          {
+            "name":"Detail of the document",
+            "type":"LOV",
+            "lovName":"DetailLevel",
+            "value":1
+          }
+        ]
+      },
+      {
+        "folder":"Docs",
+        "docID":"PLMUserMan",
+        "docTemplate":"UserManual",
+        "docTitle":"PLM User Manual",
+        "docDescription":"Contains the doc to use the PLM",
+        "documentLinks":[
+          {
+            "docId":"PLMInstall",
+            "comment":"Installation guide"
+          }
+        ],
+        "attributes":[
+          {
+            "name":"Item",
+            "type":"TEXT",
+            "value":"PLM"
+          },
+          {
+            "name":"Detail of the document",
+            "type":"LOV",
+            "lovName":"DetailLevel",
+            "value":0
+          }
+        ]
+      }
+    ]
+  },
+  "PART":{
+    "templates":[
+      {
+        "id":"Seat",
+        "type":"Seat for car",
+        "mask":"SEAT_####",
+        "attributesLocked":false,
+        "idGeneration" : true,
+        "attributes":[
+          {
+            "name":"For race",
+            "type":"BOOLEAN",
+            "mandatory":false
+          },
+          {
+            "name":"Heating",
+            "type":"BOOLEAN",
+            "mandatory":false
+          },
+          {
+            "name":"color",
+            "type":"LOV",
+            "lovName":"Color",
+            "mandatory":false
+          }
+        ]
+      },
+      {
+        "id":"Wheel",
+        "type":"Wheel for car",
+        "mask":"WHEEL_####",
+        "attributesLocked":false,
+        "idGeneration" : true,
+        "attributes":[
+          {
+            "name":"Size",
+            "type":"NUMBER",
+            "mandatory":false
+          },
+          {
+            "name":"color",
+            "type":"LOV",
+            "lovName":"Color",
+            "mandatory":false
+          }
+        ]
+      }
+    ],
+    "parts":[
+      {
+        "partNumber":"SEAT_0001",
+        "partName":"Seat family",
+        "partDescription":"Seat to use in family car",
+        "isStandardPart": false,
+        "partTemplate":"Seat",
+        "documentLinks":[],
+        "attributes":[
+          {
+            "name":"For race",
+            "type":"BOOLEAN",
+            "value":false
+          },
+          {
+            "name":"Heating",
+            "type":"BOOLEAN",
+            "value":false
+          },
+          {
+            "name":"color",
+            "type":"LOV",
+            "lovName":"Color",
+            "value":2
+          }
+        ]
+      },
+      {
+        "partNumber":"SEAT_0002",
+        "partName":"Seat race",
+        "partDescription":"Seat to use in sport car",
+        "isStandardPart": false,
+        "partTemplate":"Seat",
+        "documentLinks":[],
+        "attributes":[
+          {
+            "name":"For race",
+            "type":"BOOLEAN",
+            "value":true
+          },
+          {
+            "name":"Heating",
+            "type":"BOOLEAN",
+            "value":true
+          },
+          {
+            "name":"color",
+            "type":"LOV",
+            "lovName":"Color",
+            "value":4
+          }
+        ]
+      },
+      {
+        "partNumber":"WHEEL_0001",
+        "partName":"Wheel family",
+        "partDescription":"Wheel to use in family car",
+        "isStandardPart": false,
+        "partTemplate":"Wheel",
+        "documentLinks":[],
+        "attributes":[
+          {
+            "name":"Size",
+            "type":"NUMBER",
+            "value":17
+          },
+          {
+            "name":"color",
+            "type":"LOV",
+            "lovName":"Color",
+            "value":0
+          }
+        ]
+      },
+      {
+        "partNumber":"WHEEL_0002",
+        "partName":"Wheel sport",
+        "partDescription":"Wheel to use in sport car",
+        "isStandardPart": false,
+        "partTemplate":"Wheel",
+        "documentLinks":[],
+        "attributes":[
+          {
+            "name":"Size",
+            "type":"NUMBER",
+            "value":22
+          },
+          {
+            "name":"color",
+            "type":"LOV",
+            "lovName":"Color",
+            "value":5
+          }
+        ]
+      },
+      {
+        "partNumber":"CAR_0001",
+        "partName":"Car",
+        "partDescription":"Car",
+        "isStandardPart": false,
+        "partTemplate":null,
+        "documentLinks":[],
+        "attributes":[]
+      }
+    ],
+    "assembly":[
+      {
+        "partNumber":"CAR_0001",
+        "parts":[
+          {
+            "partNumber":"WHEEL_0001",
+            "optional":false,
+            "amount":4,
+            "unit":null,
+            "substitute":[
+              {
+                "partNumber" : "WHEEL_0002",
+                "amount" : 4,
+                "unit" : null
+              }
+            ]
+          },
+          {
+            "partNumber":"SEAT_0001",
+            "optional":false,
+            "amount":7,
+            "unit":null,
+            "substitute":[
+              {
+                "partNumber" : "SEAT_0002",
+                "amount" : 2,
+                "unit" : null
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "products":[
+      {
+        "name": "DocdokuCar",
+        "description":"Car built with the plm",
+        "rootPart": "CAR_0001"
+      }
+    ]
+  }
+}

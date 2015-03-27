@@ -20,9 +20,11 @@
 package com.docdoku.loaders.tools;
 
 import com.docdoku.cli.services.DocumentService;
+import com.docdoku.cli.services.LOVService;
 import com.docdoku.cli.services.ProductService;
 import com.docdoku.cli.services.UploadDownloadService;
 import com.docdoku.core.services.IDocumentManagerWS;
+import com.docdoku.core.services.ILOVManagerWS;
 import com.docdoku.core.services.IProductManagerWS;
 import com.docdoku.core.services.IUploadDownloadWS;
 
@@ -54,6 +56,15 @@ public class ScriptingTools {
     public static IDocumentManagerWS createDocumentService(String url, String login, String password) throws Exception {
         DocumentService service = new DocumentService(new URL(url), new javax.xml.namespace.QName("http://server.docdoku.com/", "DocumentManagerBeanService"));
         IDocumentManagerWS port = service.getPort(IDocumentManagerWS.class);
+        ((BindingProvider) port).getRequestContext().put(BindingProvider.USERNAME_PROPERTY, login);
+        ((BindingProvider) port).getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, password);
+
+        return port;
+    }
+
+    public static ILOVManagerWS createLOVService(String url, String login, String password) throws Exception {
+        LOVService service = new LOVService(new URL(url), new javax.xml.namespace.QName("http://server.docdoku.com/", "LOVManagerBeanService"));
+        ILOVManagerWS port = service.getPort(ILOVManagerWS.class);
         ((BindingProvider) port).getRequestContext().put(BindingProvider.USERNAME_PROPERTY, login);
         ((BindingProvider) port).getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, password);
 

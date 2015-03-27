@@ -20,10 +20,19 @@
 
 package com.docdoku.loaders;
 
+import com.docdoku.loaders.common.LOVLoader;
 import com.docdoku.loaders.documents.DocumentsLoader;
 import com.docdoku.loaders.products.ProductLoader;
+import com.docdoku.loaders.utils.JsonParserConstants;
 
+import javax.activation.DataHandler;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import java.io.Console;
+import java.io.FileReader;
+import java.io.StringReader;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -68,8 +77,19 @@ public class WorkspaceLoader {
                 }
             }
 
-            completlySuccess &= DocumentsLoader.fillWorkspace(serverURL,workspace,login,password);            
-            completlySuccess &= ProductLoader.fillWorkspace(serverURL, workspace, login, password);
+            URL exempleURL = WorkspaceLoader.class.getResource("/com/docdoku/loaders/sample.json");
+            DataHandler dh = new DataHandler(exempleURL);
+
+            JsonReader reader = Json.createReader(dh.getInputStream());
+            JsonObject exempleToLoad = (JsonObject) reader.read();
+            reader.close();
+
+
+            completlySuccess &= LOVLoader.fillWorkspace(serverURL, workspace, login, password, exempleToLoad.getJsonArray(JsonParserConstants.LOV));
+            completlySuccess &= DocumentsLoader.fillWorkspace(serverURL, workspace, login, password, exempleToLoad.getJsonObject(JsonParserConstants.DOC));
+            completlySuccess &= ProductLoader.fillWorkspace(serverURL, workspace, login, password, exempleToLoad.getJsonObject(JsonParserConstants.PART_PART));
+
+
 
             if(completlySuccess){
                 LOGGER.log(Level.INFO, "...done!");

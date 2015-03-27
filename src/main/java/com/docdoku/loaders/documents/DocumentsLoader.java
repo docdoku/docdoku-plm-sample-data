@@ -19,10 +19,22 @@
  */
 package com.docdoku.loaders.documents;
 
+import com.docdoku.core.document.DocumentIterationKey;
+import com.docdoku.core.document.DocumentMaster;
+import com.docdoku.core.document.DocumentRevision;
 import com.docdoku.core.exceptions.*;
+import com.docdoku.core.meta.DefaultAttributeTemplate;
+import com.docdoku.core.meta.InstanceAttribute;
+import com.docdoku.core.meta.InstanceAttributeTemplate;
 import com.docdoku.core.services.IDocumentManagerWS;
 import com.docdoku.loaders.tools.ScriptingTools;
+import com.docdoku.loaders.tools.UtilsLoader;
+import com.docdoku.loaders.utils.JsonParserConstants;
 
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,17 +47,27 @@ public class DocumentsLoader {
     private static final Logger LOGGER = Logger.getLogger(DocumentsLoader.class.getName());
 
     private static IDocumentManagerWS dm;
-    
-    private static final String[] folders = {"Customers","Accounting","Users","Returns","Docs","Share"};
 
-    public static boolean fillWorkspace(String serverURL, String workpaceId, String login, String password) {
+    public static boolean fillWorkspace(String serverURL, String workpaceId, String login, String password, JsonObject partObject) {
         try {
             
             dm = ScriptingTools.createDocumentService(serverURL + "/services/document?wsdl", login, password);
             
-            createFolders(workpaceId);
-            createDocumentTemplates(workpaceId);
-            createDocuments(workpaceId);
+            createFolders(workpaceId, partObject.getJsonArray(JsonParserConstants.DOC_FOLDERS));
+
+            JsonArray templates = partObject.getJsonArray(JsonParserConstants.DOC_TEMPLATE);
+            if (templates != null) {
+                for (int i = 0; i < templates.size(); i++) {
+                    createDocumentTemplates(workpaceId, templates.getJsonObject(i));
+                }
+            }
+
+            JsonArray documents = partObject.getJsonArray(JsonParserConstants.DOC_DOCUMENTS);
+            if (documents != null) {
+                for (int i = 0; i < documents.size(); i++) {
+                    createDocuments(workpaceId, documents.getJsonObject(i));
+                }
+            }
             
             return true;
             
@@ -55,18 +77,139 @@ public class DocumentsLoader {
         }        
     }
 
-    private static void createDocumentTemplates(String workpaceId) throws DocumentMasterTemplateAlreadyExistsException, NotAllowedException, WorkspaceNotFoundException, CreationException, AccessRightException, UserNotFoundException {
-        dm.createDocumentMasterTemplate(workpaceId,"MyTemplate","Document template","DOC-***-###",null,true,false);
+    private static void createDocumentTemplates(String workpaceId, JsonObject template){
+
+        String templateId = template.getString(JsonParserConstants.DOC_TEMPLATE_ID, null);
+        String templateType = template.getString(JsonParserConstants.DOC_TEMPLATE_TYPE, null);
+        String templateMask = template.getString(JsonParserConstants.DOC_TEMPLATE_MASK, null);
+        boolean templateAttributesLocked = template.getBoolean(JsonParserConstants.DOC_TEMPLATE_ATTRIBUTE_LOCKED, false);
+        boolean templateIdGeneration = template.getBoolean(JsonParserConstants.DOC_TEMPLATE_ID_GENERATION, false);
+        JsonArray attributes = template.getJsonArray(JsonParserConstants.DOC_TEMPLATE_ATTRIBUTES);
+
+
+        List<InstanceAttributeTemplate> attributesTemplates = new ArrayList<>();
+        List<String> lovNames = new ArrayList<>();
+        for (int i = 0; i < attributes.size(); i++) {
+            JsonObject attributeTemplate = attributes.getJsonObject(i);
+            String name = attributeTemplate.getString(JsonParserConstants.ATTRIBUTE_NAME, null);
+            String type = attributeTemplate.getString(JsonParserConstants.ATTRIBUTE_TYPE, null);
+            String lovName = attributeTemplate.getString(JsonParserConstants.ATTRIBUTE_LOV_NAME, null);
+            boolean mandatory = attributeTemplate.getBoolean(JsonParserConstants.ATTRIBUTE_MANDATORY, false);
+
+            if (name != null && !name.equalsIgnoreCase("") && type!=null && !type.equalsIgnoreCase("")){
+                InstanceAttributeTemplate attributeTemplateInstance = UtilsLoader.getInstanceAttributeTemplate(name, type, mandatory, lovName, workpaceId);
+                if (attributeTemplateInstance != null) {
+                    attributesTemplates.add(attributeTemplateInstance);
+                    if (lovName != null){
+                        lovNames.add(lovName);
+                    }else{
+                        lovNames.add("");
+                    }
+                }
+            }else{
+                LOGGER.log(Level.SEVERE, "Can't create attribute for template without a name or a type");
+            }
+        }
+
+        InstanceAttributeTemplate[] attributesList = attributesTemplates.toArray(new InstanceAttributeTemplate[attributesTemplates.size()]);
+        String[] lovNamesList = lovNames.toArray(new String[lovNames.size()]);
+        if (templateId != null && !templateId.equalsIgnoreCase("")){
+            try {
+                dm.createDocumentMasterTemplate(workpaceId,templateId,templateType,null,templateMask,attributesList,lovNamesList,templateIdGeneration,templateAttributesLocked);
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Can't create a doc template", e);
+            }
+        }else{
+            LOGGER.log(Level.SEVERE, "Can't create a doc template without a template id");
+        }
+
     }
 
-    private static void createFolders(String workpaceId) throws NotAllowedException, WorkspaceNotFoundException, CreationException, AccessRightException, UserNotFoundException, FolderAlreadyExistsException, FolderNotFoundException {
-        for (String folder:folders) {
-            dm.createFolder(workpaceId, folder);
+    private static void createFolders(String workpaceId, JsonArray folders){
+
+        for (int i = 0; i < folders.size() ; i++) {
+            String folderName = folders.isNull(i) ? null : folders.getString(i);
+            if (folderName != null && ! folderName.equalsIgnoreCase("")) {
+                try {
+                    dm.createFolder(workpaceId, folderName);
+                } catch (Exception e) {
+                    LOGGER.log(Level.SEVERE, "Can't create a Folder : "+folderName, e);
+                }
+            }else{
+                LOGGER.log(Level.SEVERE, "Can't create a Folder without a name");
+            }
         }
     } 
-    private static void createDocuments(String workpaceId) throws CreationException, FileAlreadyExistsException, DocumentRevisionAlreadyExistsException, WorkspaceNotFoundException, UserNotFoundException, NotAllowedException, DocumentMasterAlreadyExistsException, RoleNotFoundException, FolderNotFoundException, WorkflowModelNotFoundException, AccessRightException, DocumentMasterTemplateNotFoundException {
-        dm.createDocumentMaster(workpaceId,"Welcome","Sample document","Welcome to DocdokuPLM",null,null,null,null,null);
-        dm.createDocumentMaster(workpaceId,"DOC-AAA-001","Sample document","Nothing special","MyTemplate",null,null,null,null);
+    private static void createDocuments(String workpaceId, JsonObject document){
+
+        String docFolder = document.getString(JsonParserConstants.DOCUMENT_FOLDER, null);
+        String docID = document.getString(JsonParserConstants.DOCUMENT_ID, null);
+        String docTitle = document.getString(JsonParserConstants.DOCUMENT_TITLE, null);
+        String docDescription = document.getString(JsonParserConstants.DOCUMENT_DESCRIPTION, null);
+        String docTemplateName = document.getString(JsonParserConstants.DOCUMENT_TEMPLATE, null);
+        JsonArray documentLinks = document.getJsonArray(JsonParserConstants.DOCUMENT_DOC_LINKED);
+        JsonArray docAttributes = document.getJsonArray(JsonParserConstants.DOCUMENT_ATTRIBUTES);
+
+        if (docID != null && !docID.equalsIgnoreCase("")) {
+
+            DocumentRevision docRev = null;
+            try {
+                String pathToFolder = workpaceId;
+                if (docFolder != null && !docFolder.trim().equalsIgnoreCase("")){
+                    pathToFolder = workpaceId+"/"+docFolder;
+                }
+                docRev = dm.createDocumentMaster(pathToFolder,docID,docTitle,docDescription,docTemplateName,null,null,null,null);
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Can't create doc master : " + docID, e);
+            }
+
+            DocumentIterationKey docIterationKey = new DocumentIterationKey(workpaceId,docID,"A",1);
+
+
+            ArrayList<InstanceAttribute> attributList = null;
+            //Create InstanceAtribute
+            if (docAttributes != null) {
+                attributList = new ArrayList<>();
+                for (int i = 0; i < docAttributes.size(); i++) {
+                    InstanceAttribute instanceAttribute = UtilsLoader.createInstanceAttribute(docAttributes.getJsonObject(i), workpaceId);
+                    if (instanceAttribute != null){
+                        attributList.add(instanceAttribute);
+                    }
+                }
+            }
+
+            //Create DocumentIterationKey[]
+            List<DocumentIterationKey> documentIterationKeysList = null;
+            List<String> documentLinkCommentList = null;
+            DocumentIterationKey[] documentIterationKeys = null;
+            String[] commentList = null;
+            if (documentLinks != null) {
+                documentIterationKeysList = new ArrayList<>();
+                documentLinkCommentList = new ArrayList<>();
+                for (int i = 0; i < documentLinks.size(); i++) {
+                    JsonObject documentLinkedJson = documentLinks.getJsonObject(i);
+                    String documentId = documentLinkedJson.getString(JsonParserConstants.DOCUMENT_DOCUMENT_LINKS_DOC_ID, null);
+                    String comment = documentLinkedJson.getString(JsonParserConstants.DOCUMENT_DOCUMENT_LINKS_COMMENT, "");
+                    if (documentId != null && !documentId.equalsIgnoreCase("")){
+                        documentIterationKeysList.add(new DocumentIterationKey(workpaceId, documentId, "A", 1));
+                        documentLinkCommentList.add(comment);
+                    }else{
+                        LOGGER.log(Level.SEVERE, "Can't create Document link with empty docID");
+                    }
+                }
+                documentIterationKeys = documentIterationKeysList.toArray(new DocumentIterationKey[documentIterationKeysList.size()]);
+                commentList = documentLinkCommentList.toArray(new String[documentLinkCommentList.size()]);
+            }
+
+            try {
+                dm.updateDocument(docIterationKey,"",attributList, documentIterationKeys, commentList);
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Can't create part master : " + docID, e);
+            }
+        }else{
+            LOGGER.log(Level.SEVERE, "Can't create docuement with empty docID ");
+        }
+
 
     }
 }
