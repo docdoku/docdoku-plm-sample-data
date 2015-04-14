@@ -1,5 +1,47 @@
 {
-  "LOV":[],
+  "LOV":[
+    {
+      "lovName":"Couleur",
+      "possibleValues":[
+        {
+          "name":"Rouge",
+          "value":"#FF0000"
+        },
+        {
+          "name":"Bleu",
+          "value":"#0000FF"
+        },
+        {
+          "name":"Vert",
+          "value":"#00FF00"
+        },
+        {
+          "name":"Blanc",
+          "value":"#FFFFFF"
+        },
+        {
+          "name":"Noir",
+          "value":"#000000"
+        },
+        {
+          "name":"Jaune",
+          "value":"#FFFF00"
+        },
+        {
+          "name":"Cyan",
+          "value":"#00FFFF"
+        },
+        {
+          "name":"Rose",
+          "value":"#FF00FF"
+        },
+        {
+          "name":"Gris",
+          "value":"#808080"
+        }
+      ]
+    }
+  ],
   "DOC":{
     "templates":[
       {
@@ -215,7 +257,20 @@
             "comment":"Fiche technique de l'article"
           }
         ],
-        "attributes":[]
+        "attributes":[
+          {
+            "name":"Couleur disponible 1",
+            "type":"LOV",
+            "lovName":"Couleur",
+            "value":0
+          },
+          {
+            "name":"Couleur disponible 2",
+            "type":"LOV",
+            "lovName":"Couleur",
+            "value":1
+          }
+        ]
       },
       {
         "partNumber":"mfnx-mc01-s11-12-mfnu-msn0001-2008-04-25",
