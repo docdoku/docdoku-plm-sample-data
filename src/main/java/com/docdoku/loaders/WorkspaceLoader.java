@@ -51,7 +51,7 @@ public class WorkspaceLoader {
 
     public static void main(String[] args) throws Exception {
 
-        try{
+        try {
             
             String serverURL;
             String login;
@@ -64,37 +64,57 @@ public class WorkspaceLoader {
                 password =args[1];
                 workspace=args[2];
                 serverURL= (args.length==4) ? args[3] : "http://localhost:8080";
-            }else{
+            } else {
                 Console c = System.console();
-                if(c != null) {
+                if (c != null) {
                     login = c.readLine("Please enter your login: ");
                     password = new String(c.readPassword("Please enter your password: "));
                     workspace = c.readLine("Please enter the workspace into which the sample data will be imported: ");
                     serverURL = c.readLine("Please enter the URL of your DocDokuPLM server, http://localhost:8080 for example: ");
-                }else{
+                } else {
                     LOGGER.log(Level.SEVERE, "cannot read arguments");
                     return;
                 }
             }
 
-            URL exempleURL = WorkspaceLoader.class.getResource("/com/docdoku/loaders/sample.json");
-            DataHandler dh = new DataHandler(exempleURL);
+            // Load sample data
+
+            URL exampleURL = WorkspaceLoader.class.getResource("/com/docdoku/loaders/sample.json");
+            DataHandler dh = new DataHandler(exampleURL);
 
             JsonReader reader = Json.createReader(dh.getInputStream());
-            JsonObject exempleToLoad = (JsonObject) reader.read();
+            JsonObject exampleToLoad = (JsonObject) reader.read();
             reader.close();
 
 
-            completlySuccess &= LOVLoader.fillWorkspace(serverURL, workspace, login, password, exempleToLoad.getJsonArray(JsonParserConstants.LOV));
-            completlySuccess &= DocumentsLoader.fillWorkspace(serverURL, workspace, login, password, exempleToLoad.getJsonObject(JsonParserConstants.DOC));
-            completlySuccess &= ProductLoader.fillWorkspace(serverURL, workspace, login, password, exempleToLoad.getJsonObject(JsonParserConstants.PART_PART));
+            completlySuccess &= LOVLoader.fillWorkspace(serverURL, workspace, login, password, exampleToLoad.getJsonArray(JsonParserConstants.LOV));
+            completlySuccess &= DocumentsLoader.fillWorkspace(serverURL, workspace, login, password, exampleToLoad.getJsonObject(JsonParserConstants.DOC));
+            completlySuccess &= ProductLoader.fillWorkspace(serverURL, workspace, login, password, exampleToLoad.getJsonObject(JsonParserConstants.PART_PART));
 
+            if (completlySuccess) {
+                LOGGER.log(Level.INFO, "...example done!");
+            } else {
+                LOGGER.log(Level.WARNING, "...example incomplete!");
+            }
 
+            // Load documentation data
 
-            if(completlySuccess){
-                LOGGER.log(Level.INFO, "...done!");
-            }else{
-                LOGGER.log(Level.WARNING, "...incomplete!");
+            URL docURL = WorkspaceLoader.class.getResource("/com/docdoku/loaders/doc_sample.json");
+            DataHandler docDh = new DataHandler(docURL);
+
+            JsonReader docReader = Json.createReader(docDh.getInputStream());
+            JsonObject docToLoad = (JsonObject) docReader.read();
+            docReader.close();
+
+            completlySuccess = true;
+            completlySuccess &= LOVLoader.fillWorkspace(serverURL, workspace, login, password, docToLoad.getJsonArray(JsonParserConstants.LOV));
+            completlySuccess &= DocumentsLoader.fillWorkspace(serverURL, workspace, login, password, docToLoad.getJsonObject(JsonParserConstants.DOC));
+            completlySuccess &= ProductLoader.fillWorkspace(serverURL, workspace, login, password, docToLoad.getJsonObject(JsonParserConstants.PART_PART));
+
+            if (completlySuccess) {
+                LOGGER.log(Level.INFO, "...doc done!");
+            } else {
+                LOGGER.log(Level.WARNING, "...doc incomplete!");
             }
             
         } catch (Exception e){
