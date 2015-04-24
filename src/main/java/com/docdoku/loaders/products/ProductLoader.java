@@ -307,16 +307,38 @@ public class ProductLoader {
                 String substitutePartNumber = substituteJsonObject.getString(JsonParserConstants.ASSEMBLY_SUBSTITUTE_PART_NUMBER, null);
                 double substituteAmount = substituteJsonObject.getJsonNumber(JsonParserConstants.ASSEMBLY_SUBSTITUTE_AMOUNT).doubleValue();
                 String substituteUnit = substituteJsonObject.getString(JsonParserConstants.ASSEMBLY_SUBSTITUTE_UNIT, null);
+                JsonArray substituteCadInstances = subPart.getJsonArray(JsonParserConstants.ASSEMBLY_CAD_INSTANCES);
 
-                PartMaster substitutePartMaster = getPartMasterWithPartNumber(substitutePartNumber, workpaceId);
-                if (substitutePartMaster != null) {
-                    PartSubstituteLink substitute = new PartSubstituteLink();
-                    substitute.setSubstitute(substitutePartMaster);
-                    substitute.setAmount(substituteAmount);
-                    substitute.setUnit(substituteUnit);
-                    partSubstitutes.add(substitute);
-                }else{
-                    LOGGER.log(Level.SEVERE, "(Substitute) Can't find part master for part number : "+substitutePartNumber);
+                if (substituteAmount == substituteCadInstances.size()) {
+                    List<CADInstance> cadInstanceList = new ArrayList<>();
+                    for (int i=0; i<substituteCadInstances.size(); i++) {
+                        JsonObject cadInstance = (JsonObject) substituteCadInstances.get(i);
+
+                        double rx = cadInstance.getJsonNumber(JsonParserConstants.ASSEMBLY_CAD_INSTANCES_RX).doubleValue();
+                        double ry = cadInstance.getJsonNumber(JsonParserConstants.ASSEMBLY_CAD_INSTANCES_RY).doubleValue();
+                        double rz = cadInstance.getJsonNumber(JsonParserConstants.ASSEMBLY_CAD_INSTANCES_RZ).doubleValue();
+                        double tx = cadInstance.getJsonNumber(JsonParserConstants.ASSEMBLY_CAD_INSTANCES_TX).doubleValue();
+                        double ty = cadInstance.getJsonNumber(JsonParserConstants.ASSEMBLY_CAD_INSTANCES_TY).doubleValue();
+                        double tz = cadInstance.getJsonNumber(JsonParserConstants.ASSEMBLY_CAD_INSTANCES_TZ).doubleValue();
+
+                        CADInstance cadInstancei = new CADInstance(tx, ty, tz, rx, ry, rz);
+                        cadInstanceList.add(cadInstancei);
+                    }
+
+                    PartMaster substitutePartMaster = getPartMasterWithPartNumber(substitutePartNumber, workpaceId);
+                    if (substitutePartMaster != null) {
+                        PartSubstituteLink substitute = new PartSubstituteLink();
+                        substitute.setSubstitute(substitutePartMaster);
+                        substitute.setAmount(substituteAmount);
+                        substitute.setUnit(substituteUnit);
+                        substitute.setCadInstances(cadInstanceList);
+                        partSubstitutes.add(substitute);
+                    }else{
+                        LOGGER.log(Level.SEVERE, "(Substitute) Can't find part master for part number : "+substitutePartNumber);
+                    }
+
+                } else {
+                    LOGGER.log(Level.SEVERE, "(Substitute) Can't find enough cad instances for part number : "+substitutePartNumber);
                 }
             }
         } return partSubstitutes;
@@ -330,15 +352,37 @@ public class ProductLoader {
             boolean isOptional = subPart.getBoolean(JsonParserConstants.ASSEMBLY_PART_IS_OPTIONAL, false);
             double amount = subPart.getJsonNumber(JsonParserConstants.ASSEMBLY_PART_AMOUNT).doubleValue();
             String unit = subPart.getString(JsonParserConstants.ASSEMBLY_PART_UNIT, null);
+            JsonArray cadInstances = subPart.getJsonArray(JsonParserConstants.ASSEMBLY_CAD_INSTANCES);
 
-            PartMaster subPartMaster = getPartMasterWithPartNumber(subPartNumber, workpaceId);
-            if (subPartMaster != null) {
-                PartUsageLink usageLink = new PartUsageLink(subPartMaster, amount, unit, isOptional);
-                List<PartSubstituteLink> partSubstitutes = getPartSubstituteLinks(workpaceId, subPart);
-                usageLink.setSubstitutes(partSubstitutes);
-                partUsageLinks.add(usageLink);
-            }else{
-                LOGGER.log(Level.SEVERE, "(SubPart) Can't find part master for part number : "+subPartMaster);
+            if (amount == cadInstances.size()) {
+                List<CADInstance> cadInstanceList = new ArrayList<>();
+                for (int j=0; j<cadInstances.size(); j++) {
+                    JsonObject cadInstance = (JsonObject) cadInstances.get(j);
+
+                    double rx = cadInstance.getJsonNumber(JsonParserConstants.ASSEMBLY_CAD_INSTANCES_RX).doubleValue();
+                    double ry = cadInstance.getJsonNumber(JsonParserConstants.ASSEMBLY_CAD_INSTANCES_RY).doubleValue();
+                    double rz = cadInstance.getJsonNumber(JsonParserConstants.ASSEMBLY_CAD_INSTANCES_RZ).doubleValue();
+                    double tx = cadInstance.getJsonNumber(JsonParserConstants.ASSEMBLY_CAD_INSTANCES_TX).doubleValue();
+                    double ty = cadInstance.getJsonNumber(JsonParserConstants.ASSEMBLY_CAD_INSTANCES_TY).doubleValue();
+                    double tz = cadInstance.getJsonNumber(JsonParserConstants.ASSEMBLY_CAD_INSTANCES_TZ).doubleValue();
+
+                    CADInstance cadInstancej = new CADInstance(tx, ty, tz, rx, ry, rz);
+                    cadInstanceList.add(cadInstancej);
+                }
+
+                PartMaster subPartMaster = getPartMasterWithPartNumber(subPartNumber, workpaceId);
+                if (subPartMaster != null) {
+                    PartUsageLink usageLink = new PartUsageLink(subPartMaster, amount, unit, isOptional);
+                    usageLink.setCadInstances(cadInstanceList);
+                    List<PartSubstituteLink> partSubstitutes = getPartSubstituteLinks(workpaceId, subPart);
+                    usageLink.setSubstitutes(partSubstitutes);
+                    partUsageLinks.add(usageLink);
+                }else{
+                    LOGGER.log(Level.SEVERE, "(SubPart) Can't find part master for part number : "+subPartMaster);
+                }
+
+            } else {
+                LOGGER.log(Level.SEVERE, "(SubPart) Can't find enough cad instances for part number : "+subPartNumber);
             }
         }
 

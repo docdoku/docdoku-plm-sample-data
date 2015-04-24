@@ -55,6 +55,13 @@ public class JsonParserConstants {
     public static final String ASSEMBLY_SUBSTITUTE_PART_NUMBER = "partNumber";
     public static final String ASSEMBLY_SUBSTITUTE_AMOUNT = "amount";
     public static final String ASSEMBLY_SUBSTITUTE_UNIT = "unit";
+    public static final String ASSEMBLY_CAD_INSTANCES = "cadInstances";
+    public static final String ASSEMBLY_CAD_INSTANCES_RX = "rx";
+    public static final String ASSEMBLY_CAD_INSTANCES_RY = "ry";
+    public static final String ASSEMBLY_CAD_INSTANCES_RZ = "rz";
+    public static final String ASSEMBLY_CAD_INSTANCES_TX = "tx";
+    public static final String ASSEMBLY_CAD_INSTANCES_TY = "ty";
+    public static final String ASSEMBLY_CAD_INSTANCES_TZ = "tz";
 
     /**
      * Product

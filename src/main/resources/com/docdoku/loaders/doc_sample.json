@@ -426,6 +426,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           },
           {
@@ -433,11 +443,39 @@
             "optional":false,
             "amount":2,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[
               {
                 "partNumber" : "rotor-right-3.x",
                 "amount" : 2,
-                "unit" : null
+                "unit" : null,
+                "cadInstances": [
+                  {
+                    "rx": 0,
+                    "ry": 0,
+                    "rz": 0,
+                    "tx": 0,
+                    "ty": 0,
+                    "tz": 0
+                  },
+                  {
+                    "rx": 0,
+                    "ry": 0,
+                    "rz": 0,
+                    "tx": 0,
+                    "ty": 0,
+                    "tz": 0
+                  }
+                ]
               }
             ]
           }
@@ -451,6 +489,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           }
         ]
@@ -463,6 +511,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           }
         ]
@@ -475,6 +533,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           },
           {
@@ -482,6 +550,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           },
           {
@@ -489,6 +567,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           }
         ]
@@ -501,6 +589,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           }
         ]
@@ -513,6 +611,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           }
         ]
@@ -525,6 +633,16 @@
             "optional":true,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           },
           {
@@ -532,6 +650,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           },
           {
@@ -539,6 +667,16 @@
             "optional":true,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           },
           {
@@ -546,6 +684,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           },
           {
@@ -553,6 +701,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           },
           {
@@ -560,6 +718,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           },
           {
@@ -567,6 +735,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           },
           {
@@ -574,11 +752,31 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[
               {
                 "partNumber" : "m5391138800000-s87-53120-10149-002",
                 "amount" : 1,
-                "unit" : null
+                "unit" : null,
+                "cadInstances": [
+                  {
+                    "rx": 0,
+                    "ry": 0,
+                    "rz": 0,
+                    "tx": 0,
+                    "ty": 0,
+                    "tz": 0
+                  }
+                ]
               }
             ]
           }
@@ -592,6 +790,16 @@
             "optional":false,
             "amount":1,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[]
           }
         ]

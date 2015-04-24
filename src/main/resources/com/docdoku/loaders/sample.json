@@ -310,11 +310,79 @@
             "optional":false,
             "amount":4,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              },
+              {
+                "rx": 1,
+                "ry": 1,
+                "rz": 1,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              },
+              {
+                "rx": 2,
+                "ry": 2,
+                "rz": 2,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              },
+              {
+                "rx": 3,
+                "ry": 3,
+                "rz": 3,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[
               {
                 "partNumber" : "WHEEL_0002",
                 "amount" : 4,
-                "unit" : null
+                "unit" : null,
+                "cadInstances": [
+                  {
+                    "rx": 0,
+                    "ry": 0,
+                    "rz": 0,
+                    "tx": 0,
+                    "ty": 0,
+                    "tz": 0
+                  },
+                  {
+                    "rx": 0,
+                    "ry": 0,
+                    "rz": 0,
+                    "tx": 1,
+                    "ty": 1,
+                    "tz": 1
+                  },
+                  {
+                    "rx": 0,
+                    "ry": 0,
+                    "rz": 0,
+                    "tx": 2,
+                    "ty": 2,
+                    "tz": 2
+                  },
+                  {
+                    "rx": 0,
+                    "ry": 0,
+                    "rz": 0,
+                    "tx": 3,
+                    "ty": 3,
+                    "tz": 3
+                  }
+                ]
               }
             ]
           },
@@ -323,11 +391,87 @@
             "optional":false,
             "amount":7,
             "unit":null,
+            "cadInstances": [
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              },
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              },
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              },
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              },
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              },
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              },
+              {
+                "rx": 0,
+                "ry": 0,
+                "rz": 0,
+                "tx": 0,
+                "ty": 0,
+                "tz": 0
+              }
+            ],
             "substitute":[
               {
                 "partNumber" : "SEAT_0002",
                 "amount" : 2,
-                "unit" : null
+                "unit" : null,
+                "cadInstances": [
+                  {
+                    "rx": 0,
+                    "ry": 0,
+                    "rz": 0,
+                    "tx": 0,
+                    "ty": 0,
+                    "tz": 0
+                  },
+                  {
+                    "rx": 0,
+                    "ry": 0,
+                    "rz": 0,
+                    "tx": 0,
+                    "ty": 0,
+                    "tz": 0
+                  }
+                ]
               }
             ]
           }
