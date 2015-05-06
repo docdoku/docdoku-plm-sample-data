@@ -205,7 +205,7 @@ public class ProductLoader {
             }
 
             try {
-                pm.updatePartIteration(partIterationKey, "", source, null, attributList, documentIterationKeys, commentList);
+                pm.updatePartIteration(partIterationKey, "", source, null, attributList, null, documentIterationKeys, commentList);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Can't create part master : " + partNumber, e);
             }
@@ -224,7 +224,7 @@ public class ProductLoader {
         PartIteration partIteration = null;
         if (rootPart != null && !rootPart.equalsIgnoreCase("")){
             try {
-                List<PartMaster> listOfPArtMAster = pm.findPartMasters(workpaceId, rootPart, 1);
+                List<PartMaster> listOfPArtMAster = pm.findPartMasters(workpaceId, rootPart, rootPart, 1);
                 if (listOfPArtMAster != null && listOfPArtMAster.size()>0){
                     PartMaster partMaster = listOfPArtMAster.get(0);
                     partIteration = partMaster.getLastRevision().getLastIteration();
@@ -246,7 +246,7 @@ public class ProductLoader {
             }
 
             try {
-                pm.updatePartIteration(new PartIterationKey(workpaceId, rootPart,"A",1),"", PartIteration.Source.MAKE,partUsageLinks,partIteration.getInstanceAttributes(),null,null);
+                pm.updatePartIteration(new PartIterationKey(workpaceId, rootPart,"A",1),"", PartIteration.Source.MAKE,partUsageLinks,partIteration.getInstanceAttributes(),null,null,null);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Can't create assembly for part with part number : " + rootPart, e);
             }
@@ -284,7 +284,7 @@ public class ProductLoader {
 
     private static PartMaster getPartMasterWithPartNumber(String partNumber, String workspaceId){
         try {
-            List<PartMaster> listOfPArtMAster = pm.findPartMasters(workspaceId, partNumber, 1);
+            List<PartMaster> listOfPArtMAster = pm.findPartMasters(workspaceId, partNumber, partNumber, 1);
             if (listOfPArtMAster != null && listOfPArtMAster.size()>0){
                 return listOfPArtMAster.get(0);
             }
