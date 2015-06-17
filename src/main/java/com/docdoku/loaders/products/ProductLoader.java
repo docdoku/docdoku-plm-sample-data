@@ -19,8 +19,9 @@
  */
 package com.docdoku.loaders.products;
 
-import com.docdoku.core.document.DocumentIterationKey;
-import com.docdoku.core.meta.*;
+import com.docdoku.core.document.DocumentRevisionKey;
+import com.docdoku.core.meta.InstanceAttribute;
+import com.docdoku.core.meta.InstanceAttributeTemplate;
 import com.docdoku.core.product.*;
 import com.docdoku.core.services.IProductManagerWS;
 import com.docdoku.core.services.IUploadDownloadWS;
@@ -28,7 +29,8 @@ import com.docdoku.loaders.tools.ScriptingTools;
 import com.docdoku.loaders.tools.UtilsLoader;
 import com.docdoku.loaders.utils.JsonParserConstants;
 
-import javax.json.*;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -133,7 +135,7 @@ public class ProductLoader {
         String[] lovNamesList = lovNames.toArray(new String[lovNames.size()]);
         if (templateId != null && !templateId.equalsIgnoreCase("")){
             try {
-                pm.createPartMasterTemplate(workpaceId,templateId,templateType,null,templateMask,attributesList,lovNamesList,templateIdGeneration,templateAttributesLocked);
+                pm.createPartMasterTemplate(workpaceId,templateId,templateType,null,templateMask,attributesList,lovNamesList,new InstanceAttributeTemplate[0],  new String[0], templateIdGeneration,templateAttributesLocked);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Can't create a part template", e);
             }
@@ -182,30 +184,30 @@ public class ProductLoader {
                 }
             }
             //Create DocumentIterationKey[]
-            List<DocumentIterationKey> documentIterationKeysList = null;
+            List<DocumentRevisionKey> documentRevisionKeyList = null;
             List<String> documentLinkCommentList = null;
-            DocumentIterationKey[] documentIterationKeys = null;
+            DocumentRevisionKey[] documentRevisionKeys = null;
             String[] commentList = null;
             if (documentLinks != null) {
-                documentIterationKeysList = new ArrayList<>();
+                documentRevisionKeyList = new ArrayList<>();
                 documentLinkCommentList = new ArrayList<>();
                 for (int i = 0; i < documentLinks.size(); i++) {
                     JsonObject documentLinkedJson = documentLinks.getJsonObject(i);
                     String documentId = documentLinkedJson.getString(JsonParserConstants.PART_DOCUMENT_LINKS_DOC_ID, null);
                     String comment = documentLinkedJson.getString(JsonParserConstants.PART_DOCUMENT_LINKS_COMMENT, "");
                     if (documentId != null && !documentId.equalsIgnoreCase("")){
-                        documentIterationKeysList.add(new DocumentIterationKey(workpaceId, documentId, "A", 1));
+                        documentRevisionKeyList.add(new DocumentRevisionKey(workpaceId, documentId, "A"));
                         documentLinkCommentList.add(comment);
                     }else{
                         LOGGER.log(Level.SEVERE, "Can't create Document link with empty docID");
                     }
                 }
-                documentIterationKeys = documentIterationKeysList.toArray(new DocumentIterationKey[documentIterationKeysList.size()]);
+                documentRevisionKeys = documentRevisionKeyList.toArray(new DocumentRevisionKey[documentRevisionKeyList.size()]);
                 commentList = documentLinkCommentList.toArray(new String[documentLinkCommentList.size()]);
             }
 
             try {
-                pm.updatePartIteration(partIterationKey, "", source, null, attributList, null, documentIterationKeys, commentList);
+                pm.updatePartIteration(partIterationKey, "", source, null, attributList, null, documentRevisionKeys, commentList, null);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Can't create part master : " + partNumber, e);
             }
@@ -246,7 +248,7 @@ public class ProductLoader {
             }
 
             try {
-                pm.updatePartIteration(new PartIterationKey(workpaceId, rootPart,"A",1),"", PartIteration.Source.MAKE,partUsageLinks,partIteration.getInstanceAttributes(),null,null,null);
+                pm.updatePartIteration(new PartIterationKey(workpaceId, rootPart,"A",1),"", PartIteration.Source.MAKE,partUsageLinks,partIteration.getInstanceAttributes(),null,null,null,null);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Can't create assembly for part with part number : " + rootPart, e);
             }

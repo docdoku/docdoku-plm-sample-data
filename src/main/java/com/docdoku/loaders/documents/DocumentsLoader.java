@@ -20,10 +20,8 @@
 package com.docdoku.loaders.documents;
 
 import com.docdoku.core.document.DocumentIterationKey;
-import com.docdoku.core.document.DocumentMaster;
 import com.docdoku.core.document.DocumentRevision;
-import com.docdoku.core.exceptions.*;
-import com.docdoku.core.meta.DefaultAttributeTemplate;
+import com.docdoku.core.document.DocumentRevisionKey;
 import com.docdoku.core.meta.InstanceAttribute;
 import com.docdoku.core.meta.InstanceAttributeTemplate;
 import com.docdoku.core.services.IDocumentManagerWS;
@@ -48,24 +46,24 @@ public class DocumentsLoader {
 
     private static IDocumentManagerWS dm;
 
-    public static boolean fillWorkspace(String serverURL, String workpaceId, String login, String password, JsonObject partObject) {
+    public static boolean fillWorkspace(String serverURL, String workspaceId, String login, String password, JsonObject partObject) {
         try {
             
             dm = ScriptingTools.createDocumentService(serverURL + "/services/document?wsdl", login, password);
             
-            createFolders(workpaceId, partObject.getJsonArray(JsonParserConstants.DOC_FOLDERS));
+            createFolders(workspaceId, partObject.getJsonArray(JsonParserConstants.DOC_FOLDERS));
 
             JsonArray templates = partObject.getJsonArray(JsonParserConstants.DOC_TEMPLATE);
             if (templates != null) {
                 for (int i = 0; i < templates.size(); i++) {
-                    createDocumentTemplates(workpaceId, templates.getJsonObject(i));
+                    createDocumentTemplates(workspaceId, templates.getJsonObject(i));
                 }
             }
 
             JsonArray documents = partObject.getJsonArray(JsonParserConstants.DOC_DOCUMENTS);
             if (documents != null) {
                 for (int i = 0; i < documents.size(); i++) {
-                    createDocuments(workpaceId, documents.getJsonObject(i));
+                    createDocuments(workspaceId, documents.getJsonObject(i));
                 }
             }
             
@@ -166,48 +164,48 @@ public class DocumentsLoader {
             DocumentIterationKey docIterationKey = new DocumentIterationKey(workpaceId,docID,"A",1);
 
 
-            ArrayList<InstanceAttribute> attributList = null;
-            //Create InstanceAtribute
+            ArrayList<InstanceAttribute> attributeList = null;
+            //Create InstanceAttribute
             if (docAttributes != null) {
-                attributList = new ArrayList<>();
+                attributeList = new ArrayList<>();
                 for (int i = 0; i < docAttributes.size(); i++) {
                     InstanceAttribute instanceAttribute = UtilsLoader.createInstanceAttribute(docAttributes.getJsonObject(i), workpaceId);
                     if (instanceAttribute != null){
-                        attributList.add(instanceAttribute);
+                        attributeList.add(instanceAttribute);
                     }
                 }
             }
 
             //Create DocumentIterationKey[]
-            List<DocumentIterationKey> documentIterationKeysList = null;
+            List<DocumentRevisionKey> documentRevisionKeysList = null;
             List<String> documentLinkCommentList = null;
-            DocumentIterationKey[] documentIterationKeys = null;
+            DocumentRevisionKey[] documentRevisionKeys = null;
             String[] commentList = null;
             if (documentLinks != null) {
-                documentIterationKeysList = new ArrayList<>();
+                documentRevisionKeysList = new ArrayList<>();
                 documentLinkCommentList = new ArrayList<>();
                 for (int i = 0; i < documentLinks.size(); i++) {
                     JsonObject documentLinkedJson = documentLinks.getJsonObject(i);
                     String documentId = documentLinkedJson.getString(JsonParserConstants.DOCUMENT_DOCUMENT_LINKS_DOC_ID, null);
                     String comment = documentLinkedJson.getString(JsonParserConstants.DOCUMENT_DOCUMENT_LINKS_COMMENT, "");
                     if (documentId != null && !documentId.equalsIgnoreCase("")){
-                        documentIterationKeysList.add(new DocumentIterationKey(workpaceId, documentId, "A", 1));
+                        documentRevisionKeysList.add(new DocumentRevisionKey(workpaceId, documentId, "A"));
                         documentLinkCommentList.add(comment);
                     }else{
                         LOGGER.log(Level.SEVERE, "Can't create Document link with empty docID");
                     }
                 }
-                documentIterationKeys = documentIterationKeysList.toArray(new DocumentIterationKey[documentIterationKeysList.size()]);
+                documentRevisionKeys = documentRevisionKeysList.toArray(new DocumentRevisionKey[documentRevisionKeysList.size()]);
                 commentList = documentLinkCommentList.toArray(new String[documentLinkCommentList.size()]);
             }
 
             try {
-                dm.updateDocument(docIterationKey,"",attributList, documentIterationKeys, commentList);
+                dm.updateDocument(docIterationKey,"",attributeList, documentRevisionKeys, commentList);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Can't create part master : " + docID, e);
             }
         }else{
-            LOGGER.log(Level.SEVERE, "Can't create docuement with empty docID ");
+            LOGGER.log(Level.SEVERE, "Can't create document with empty docID ");
         }
 
 
