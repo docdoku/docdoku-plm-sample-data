@@ -174,7 +174,16 @@
         "partDescription":"Siège de voiture familiale",
         "isStandardPart": false,
         "partTemplate":"Siège",
-        "documentLinks":[],
+        "documentLinks":[
+          {
+            "docId":"FACT-PROPA7-2243",
+            "comment":""
+          },
+          {
+            "docId":"DOC_20150413",
+            "comment":"Fiche technique de l'article"
+          }
+        ],
         "attributes":[
           {
             "name":"Modèle sport",
@@ -191,6 +200,11 @@
             "type":"LOV",
             "lovName":"Couleur",
             "value":2
+          },
+          {
+            "name":"poids",
+            "type":"NOMBRE",
+            "value":10
           }
         ]
       },
@@ -217,6 +231,11 @@
             "type":"LOV",
             "lovName":"Couleur",
             "value":4
+          },
+          {
+            "name":"poids",
+            "type":"NOMBRE",
+            "value":15
           }
         ]
       },
@@ -226,7 +245,16 @@
         "partDescription":"Roue de voiture familiale",
         "isStandardPart": false,
         "partTemplate":"Roue",
-        "documentLinks":[],
+        "documentLinks":[
+          {
+            "docId":"FACT-PROPA7-2243",
+            "comment":""
+          },
+          {
+            "docId":"DOC_20150413",
+            "comment":"Fiche technique de l'article"
+          }
+        ],
         "attributes":[
           {
             "name":"Taille",
@@ -238,6 +266,11 @@
             "type":"LOV",
             "lovName":"Couleur",
             "value":0
+          },
+          {
+            "name":"poids",
+            "type":"NOMBRE",
+            "value":10
           }
         ]
       },
@@ -259,6 +292,11 @@
             "type":"LOV",
             "lovName":"Color",
             "value":5
+          },
+          {
+            "name":"poids",
+            "type":"NOMBRE",
+            "value":15
           }
         ]
       },
@@ -268,7 +306,16 @@
         "partDescription":"Voiture",
         "isStandardPart": false,
         "partTemplate":null,
-        "documentLinks":[],
+        "documentLinks":[
+          {
+            "docId":"FACT-PROPA7-2243",
+            "comment":""
+          },
+          {
+            "docId":"DOC_20150413",
+            "comment":"Fiche technique de l'article"
+          }
+        ],
         "attributes":[]
       },
       {

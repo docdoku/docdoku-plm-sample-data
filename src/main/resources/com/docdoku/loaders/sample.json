@@ -203,7 +203,16 @@
         "partDescription":"Seat to use in family car",
         "isStandardPart": false,
         "partTemplate":"Seat",
-        "documentLinks":[],
+        "documentLinks":[
+          {
+            "docId":"FACT-PROPA7-2243",
+            "comment":""
+          },
+          {
+            "docId":"DOC_20150413",
+            "comment":"Fiche technique de l'article"
+          }
+        ],
         "attributes":[
           {
             "name":"For race",
@@ -220,6 +229,11 @@
             "type":"LOV",
             "lovName":"Color",
             "value":2
+          },
+          {
+            "name":"weight",
+            "type":"NUMBER",
+            "value":10
           }
         ]
       },
@@ -246,6 +260,11 @@
             "type":"LOV",
             "lovName":"Color",
             "value":4
+          },
+          {
+            "name":"weight",
+            "type":"NUMBER",
+            "value":15
           }
         ]
       },
@@ -267,6 +286,11 @@
             "type":"LOV",
             "lovName":"Color",
             "value":0
+          },
+          {
+            "name":"weight",
+            "type":"NUMBER",
+            "value":10
           }
         ]
       },
@@ -288,6 +312,11 @@
             "type":"LOV",
             "lovName":"Color",
             "value":5
+          },
+          {
+            "name":"weight",
+            "type":"NUMBER",
+            "value":15
           }
         ]
       },
