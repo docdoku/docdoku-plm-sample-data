@@ -133,13 +133,15 @@ public class ProductLoader {
 
         InstanceAttributeTemplate[] attributesList = attributesTemplates.toArray(new InstanceAttributeTemplate[attributesTemplates.size()]);
         String[] lovNamesList = lovNames.toArray(new String[lovNames.size()]);
-        if (templateId != null && !templateId.equalsIgnoreCase("")){
+
+        if (templateId != null && !templateId.equalsIgnoreCase("")) {
             try {
-                pm.createPartMasterTemplate(workpaceId,templateId,templateType,null,templateMask,attributesList,lovNamesList,new InstanceAttributeTemplate[0],  new String[0], templateIdGeneration,templateAttributesLocked);
+                pm.createPartMasterTemplate(workpaceId, templateId, templateType, null, templateMask, attributesList, lovNamesList, new InstanceAttributeTemplate[0], new String[0], templateIdGeneration, templateAttributesLocked);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Can't create a part template", e);
             }
-        }else{
+
+        } else {
             LOGGER.log(Level.SEVERE, "Can't create a part template without a template id");
         }
 
@@ -151,16 +153,14 @@ public class ProductLoader {
         String partNumber = part.getString(JsonParserConstants.PART_NUMBER, null);
         String partName = part.getString(JsonParserConstants.PART_NAME, null);
         String partDescription = part.getString(JsonParserConstants.PART_DESCRIPTION, null);
-        boolean isStanderdPart = part.getBoolean(JsonParserConstants.PART_IS_STANDARD_PART, false);
+        boolean isStandardPart = part.getBoolean(JsonParserConstants.PART_IS_STANDARD_PART, false);
         String partTemplateName = part.getString(JsonParserConstants.PART_TEMPLATE_NAME, null);
         JsonArray documentLinks = part.getJsonArray(JsonParserConstants.PART_DOCUMENT_LINKS);
         JsonArray partAttributes = part.getJsonArray(JsonParserConstants.PART_ATTRIBUTES);
 
         if (partNumber != null && !partNumber.equalsIgnoreCase("")) {
-
-            PartMaster partMaster = null;
             try {
-                partMaster = pm.createPartMaster(workpaceId, partNumber, partName, isStanderdPart, null, partDescription, partTemplateName, null, null, null);
+                pm.createPartMaster(workpaceId, partNumber, partName, isStandardPart, null, partDescription, partTemplateName, null, null, null);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Can't create part master : " + partNumber, e);
                 return true;
@@ -198,7 +198,7 @@ public class ProductLoader {
                     if (documentId != null && !documentId.equalsIgnoreCase("")){
                         documentRevisionKeyList.add(new DocumentRevisionKey(workpaceId, documentId, "A"));
                         documentLinkCommentList.add(comment);
-                    }else{
+                    } else {
                         LOGGER.log(Level.SEVERE, "Can't create Document link with empty docID");
                     }
                 }
@@ -211,7 +211,8 @@ public class ProductLoader {
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Can't create part master : " + partNumber, e);
             }
-        }else{
+
+        } else {
             LOGGER.log(Level.SEVERE, "Can't create part master with empty part number");
         }
 
@@ -298,7 +299,7 @@ public class ProductLoader {
         return null;
     }
 
-    private static List<PartSubstituteLink> getPartSubstituteLinks(String workpaceId, JsonObject subPart) {
+    private static List<PartSubstituteLink> getPartSubstituteLinks(String workspaceId, JsonObject subPart) {
 
         JsonArray substitutes = subPart.getJsonArray(JsonParserConstants.ASSEMBLY_SUBSTITUTE);
         List<PartSubstituteLink> partSubstitutes = null;
@@ -327,7 +328,7 @@ public class ProductLoader {
                         cadInstanceList.add(cadInstancei);
                     }
 
-                    PartMaster substitutePartMaster = getPartMasterWithPartNumber(substitutePartNumber, workpaceId);
+                    PartMaster substitutePartMaster = getPartMasterWithPartNumber(substitutePartNumber, workspaceId);
                     if (substitutePartMaster != null) {
                         PartSubstituteLink substitute = new PartSubstituteLink();
                         substitute.setSubstitute(substitutePartMaster);
@@ -335,7 +336,7 @@ public class ProductLoader {
                         substitute.setUnit(substituteUnit);
                         substitute.setCadInstances(cadInstanceList);
                         partSubstitutes.add(substitute);
-                    }else{
+                    } else {
                         LOGGER.log(Level.SEVERE, "(Substitute) Can't find part master for part number : "+substitutePartNumber);
                     }
 
@@ -379,7 +380,7 @@ public class ProductLoader {
                     List<PartSubstituteLink> partSubstitutes = getPartSubstituteLinks(workpaceId, subPart);
                     usageLink.setSubstitutes(partSubstitutes);
                     partUsageLinks.add(usageLink);
-                }else{
+                } else {
                     LOGGER.log(Level.SEVERE, "(SubPart) Can't find part master for part number : "+subPartMaster);
                 }
 

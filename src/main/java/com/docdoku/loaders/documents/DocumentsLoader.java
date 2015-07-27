@@ -177,30 +177,30 @@ public class DocumentsLoader {
             }
 
             //Create DocumentIterationKey[]
-            List<DocumentRevisionKey> documentRevisionKeysList = null;
+            List<DocumentRevisionKey> documentRevisionKeyList = null;
             List<String> documentLinkCommentList = null;
             DocumentRevisionKey[] documentRevisionKeys = null;
             String[] commentList = null;
             if (documentLinks != null) {
-                documentRevisionKeysList = new ArrayList<>();
+                documentRevisionKeyList = new ArrayList<>();
                 documentLinkCommentList = new ArrayList<>();
                 for (int i = 0; i < documentLinks.size(); i++) {
                     JsonObject documentLinkedJson = documentLinks.getJsonObject(i);
                     String documentId = documentLinkedJson.getString(JsonParserConstants.DOCUMENT_DOCUMENT_LINKS_DOC_ID, null);
                     String comment = documentLinkedJson.getString(JsonParserConstants.DOCUMENT_DOCUMENT_LINKS_COMMENT, "");
                     if (documentId != null && !documentId.equalsIgnoreCase("")){
-                        documentRevisionKeysList.add(new DocumentRevisionKey(workpaceId, documentId, "A"));
+                        documentRevisionKeyList.add(new DocumentRevisionKey(workpaceId, documentId, "A"));
                         documentLinkCommentList.add(comment);
                     }else{
                         LOGGER.log(Level.SEVERE, "Can't create Document link with empty docID");
                     }
                 }
-                documentRevisionKeys = documentRevisionKeysList.toArray(new DocumentRevisionKey[documentRevisionKeysList.size()]);
+                documentRevisionKeys = documentRevisionKeyList.toArray(new DocumentRevisionKey[documentRevisionKeyList.size()]);
                 commentList = documentLinkCommentList.toArray(new String[documentLinkCommentList.size()]);
             }
 
             try {
-                dm.updateDocument(docIterationKey,"",attributeList, documentRevisionKeys, commentList);
+                dm.updateDocument(docIterationKey, "", attributeList, documentRevisionKeys, commentList);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Can't create part master : " + docID, e);
             }
