@@ -310,7 +310,7 @@ public class ProductLoader {
                 String substitutePartNumber = substituteJsonObject.getString(JsonParserConstants.ASSEMBLY_SUBSTITUTE_PART_NUMBER, null);
                 double substituteAmount = substituteJsonObject.getJsonNumber(JsonParserConstants.ASSEMBLY_SUBSTITUTE_AMOUNT).doubleValue();
                 String substituteUnit = substituteJsonObject.getString(JsonParserConstants.ASSEMBLY_SUBSTITUTE_UNIT, null);
-                JsonArray substituteCadInstances = subPart.getJsonArray(JsonParserConstants.ASSEMBLY_CAD_INSTANCES);
+                JsonArray substituteCadInstances = substituteJsonObject.getJsonArray(JsonParserConstants.ASSEMBLY_CAD_INSTANCES);
 
                 if (substituteAmount == substituteCadInstances.size()) {
                     List<CADInstance> cadInstanceList = new ArrayList<>();
