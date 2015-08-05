@@ -172,6 +172,11 @@
             "type":"LOV",
             "lovName":"Color",
             "mandatory":false
+          },
+          {
+            "name":"weight",
+            "type":"NUMBER",
+            "mandatory":false
           }
         ]
       },
@@ -192,6 +197,11 @@
             "type":"LOV",
             "lovName":"Color",
             "mandatory":false
+          },
+          {
+            "name":"weight",
+            "type":"NUMBER",
+            "mandatory":false
           }
         ]
       }
@@ -203,16 +213,7 @@
         "partDescription":"Seat to use in family car",
         "isStandardPart": false,
         "partTemplate":"Seat",
-        "documentLinks":[
-          {
-            "docId":"FACT-PROPA7-2243",
-            "comment":""
-          },
-          {
-            "docId":"DOC_20150413",
-            "comment":"Fiche technique de l'article"
-          }
-        ],
+        "documentLinks":[],
         "attributes":[
           {
             "name":"For race",
@@ -233,7 +234,7 @@
           {
             "name":"weight",
             "type":"NUMBER",
-            "value":10
+            "value":"25.0"
           }
         ]
       },
@@ -264,7 +265,7 @@
           {
             "name":"weight",
             "type":"NUMBER",
-            "value":15
+            "value":"25.0"
           }
         ]
       },
@@ -279,7 +280,7 @@
           {
             "name":"Size",
             "type":"NUMBER",
-            "value":17
+            "value":"17"
           },
           {
             "name":"color",
@@ -290,7 +291,7 @@
           {
             "name":"weight",
             "type":"NUMBER",
-            "value":10
+            "value":"40.0"
           }
         ]
       },
@@ -305,7 +306,7 @@
           {
             "name":"Size",
             "type":"NUMBER",
-            "value":22
+            "value":"22"
           },
           {
             "name":"color",
@@ -316,7 +317,7 @@
           {
             "name":"weight",
             "type":"NUMBER",
-            "value":15
+            "value":"45.0"
           }
         ]
       },

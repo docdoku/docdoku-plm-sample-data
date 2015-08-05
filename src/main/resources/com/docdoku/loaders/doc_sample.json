@@ -143,6 +143,11 @@
             "type":"LOV",
             "lovName":"Couleur",
             "mandatory":false
+          },
+          {
+            "name":"poids",
+            "type":"NUMBER",
+            "mandatory":false
           }
         ]
       },
@@ -162,6 +167,11 @@
             "name":"couleur",
             "type":"LOV",
             "lovName":"Couleur",
+            "mandatory":false
+          },
+          {
+            "name":"poids",
+            "type":"NUMBER",
             "mandatory":false
           }
         ]
@@ -203,8 +213,8 @@
           },
           {
             "name":"poids",
-            "type":"NOMBRE",
-            "value":10
+            "type":"NUMBER",
+            "value":"24.0"
           }
         ]
       },
@@ -234,8 +244,8 @@
           },
           {
             "name":"poids",
-            "type":"NOMBRE",
-            "value":15
+            "type":"NUMBER",
+            "value":"24.0"
           }
         ]
       },
@@ -259,7 +269,7 @@
           {
             "name":"Taille",
             "type":"NUMBER",
-            "value":17
+            "value":"17"
           },
           {
             "name":"Couleur",
@@ -269,8 +279,8 @@
           },
           {
             "name":"poids",
-            "type":"NOMBRE",
-            "value":10
+            "type":"NUMBER",
+            "value":"40.0"
           }
         ]
       },
@@ -285,7 +295,7 @@
           {
             "name":"Taille",
             "type":"NUMBER",
-            "value":22
+            "value":"22"
           },
           {
             "name":"color",
@@ -295,8 +305,8 @@
           },
           {
             "name":"poids",
-            "type":"NOMBRE",
-            "value":15
+            "type":"NUMBER",
+            "value":"45.0"
           }
         ]
       },
@@ -306,16 +316,7 @@
         "partDescription":"Voiture",
         "isStandardPart": false,
         "partTemplate":null,
-        "documentLinks":[
-          {
-            "docId":"FACT-PROPA7-2243",
-            "comment":""
-          },
-          {
-            "docId":"DOC_20150413",
-            "comment":"Fiche technique de l'article"
-          }
-        ],
+        "documentLinks":[],
         "attributes":[]
       },
       {
@@ -710,6 +711,11 @@
       }
     ],
     "products":[
+      {
+        "name": "VoitureDocdoku",
+        "description":"Voiture assemblée avec le plm",
+        "rootPart": "VOITURE_0001"
+      }
     ]
   }
 }
