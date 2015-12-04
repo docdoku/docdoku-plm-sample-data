@@ -67,7 +67,8 @@
           {
             "name":"Client name",
             "type":"TEXT",
-            "mandatory":true
+            "mandatory":true,
+            "locked":true
           },
           {
             "name":"TTC",
@@ -86,13 +87,15 @@
           {
             "name":"Item",
             "type":"TEXT",
-            "mandatory":true
+            "mandatory":true,
+            "locked":true
           },
           {
             "name":"Detail of the document",
             "type":"LOV",
             "lovName":"DetailLevel",
-            "mandatory":true
+            "mandatory":true,
+            "locked":true
           }
         ]
       }
@@ -142,7 +145,7 @@
             "name":"Detail of the document",
             "type":"LOV",
             "lovName":"DetailLevel",
-            "value":0
+            "value":2
           }
         ]
       }
