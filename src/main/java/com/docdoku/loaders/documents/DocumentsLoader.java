@@ -20,7 +20,6 @@
 package com.docdoku.loaders.documents;
 
 import com.docdoku.core.document.DocumentIterationKey;
-import com.docdoku.core.document.DocumentRevision;
 import com.docdoku.core.document.DocumentRevisionKey;
 import com.docdoku.core.meta.InstanceAttribute;
 import com.docdoku.core.meta.InstanceAttributeTemplate;
@@ -150,13 +149,12 @@ public class DocumentsLoader {
 
         if (docID != null && !docID.equalsIgnoreCase("")) {
 
-            DocumentRevision docRev = null;
             try {
                 String pathToFolder = workpaceId;
                 if (docFolder != null && !docFolder.trim().equalsIgnoreCase("")){
                     pathToFolder = workpaceId+"/"+docFolder;
                 }
-                docRev = dm.createDocumentMaster(pathToFolder,docID,docTitle,docDescription,docTemplateName,null,null,null,null);
+                dm.createDocumentMaster(pathToFolder,docID,docTitle,docDescription,docTemplateName,null,null,null,null);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Can't create doc master : " + docID, e);
             }
