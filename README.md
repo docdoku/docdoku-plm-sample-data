@@ -4,11 +4,22 @@ This repository allows you to populate your DocDokuPLM installation with some sa
 
 ## Requirements
 
-DocdokuPLM server installed and a fresh created workspace. Refer to [this page](https://github.com/docdoku/docdoku-plm) to install a DocDokuPLM server.
+DocdokuPLM server installed. Refer to [this page](https://github.com/docdoku/docdoku-plm) to install a DocDokuPLM server.
 
 ## Instructions
  
-run loadSample.sh or loadSample.bat depending on your OS. Answer the questions if any and press ENTER.
+Clone this project
 
-    ./loadSampe.sh [workspace] [login] [password] [url]
+    git clone https://github.com/docdoku/docdoku-plm-sample-data.git
+
+Run loadSample.sh or loadSample.bat depending on your OS
+
+    ./loadSample.sh [login] [password] [workspaceId] [url]
     
+Parameters :
+
+* workspaceId : then name of the workspace to be created
+* login : your account name (will be created)
+* password : your account password (will be created)
+* url : url of the DocdokuPLM instance server (http://localhost:8080)
+

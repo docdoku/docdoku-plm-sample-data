@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>docdoku-plm</artifactId>
-        <groupId>org.ow2.docdoku</groupId>
-        <version>2.0-SNAPSHOT</version>
+        <groupId>com.docdoku</groupId>
+        <version>2.5-SNAPSHOT</version>
     </parent>
-    <artifactId>docdoku-sample-loader</artifactId>
+    <artifactId>docdoku-plm-sample-data</artifactId>
     <packaging>jar</packaging>
-    <name>docdoku-sample-loader Java Sample Loader Client</name>
+    <name>docdoku-plm-sample-data Java Sample Loader Client</name>
     <build>
         <plugins>
             <plugin>
@@ -25,24 +25,26 @@
             </plugin>
         </plugins>
         <finalName>${project.artifactId}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>com/docdoku/loaders/*</include>
+                </includes>
+            </resource>
+        </resources>
     </build>
     <dependencies>
         <dependency>
-            <groupId>org.ow2.docdoku</groupId>
-            <artifactId>docdoku-common</artifactId>
+            <groupId>com.docdoku</groupId>
+            <artifactId>docdoku-api-java</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
         <dependency>
-            <groupId>org.ow2.docdoku</groupId>
-            <artifactId>docdoku-cli</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.json</artifactId>
-            <version>1.0.4</version>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
         </dependency>
     </dependencies>
 </project>

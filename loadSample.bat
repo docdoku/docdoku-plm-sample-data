@@ -1,1 +1,3 @@
-java -classpath target\docdoku-sample-loader.jar;..\docdoku-common\target\docdoku-common.jar:../docdoku-cli/target/docdoku-cli.jar com.docdoku.loaders.products.ProductStructureSampleLoader
+mvn clean install;
+mvn dependency:copy-dependencies;
+java -classpath target\docdoku-plm-sample-data.jar;target\dependency\docdoku-api-java-2.5-SNAPSHOT.jar:target\dependency\* com.docdoku.loaders.Main
