@@ -68,6 +68,8 @@ public class SampleLoader {
         createPartTemplates();
         createParts();
         createProducts();
+        createBaseline();
+        createProductInstace();
 
         createRequests();
         createIssues();
@@ -103,9 +105,9 @@ public class SampleLoader {
         UserGroupDTO group = new UserGroupDTO();
         group.setWorkspaceId(workspaceId);
         group.setId("Group1");
-        new WorkspacesApi(client).createGroup(workspaceId,group);
+        new WorkspacesApi(client).createGroup(workspaceId, group);
         group.setId("Group2");
-        new WorkspacesApi(client).createGroup(workspaceId,group);
+        new WorkspacesApi(client).createGroup(workspaceId, group);
     }
 
     private void createAccount(String accountLogin) throws ApiException {
@@ -551,11 +553,11 @@ public class SampleLoader {
         Thread.sleep(5000);
 
         LOGGER.log(Level.INFO, "Checking in parts...");
-        new PartApi(client).checkIn(workspaceId,"SEAT-010","A","");
-        new PartApi(client).checkIn(workspaceId,"SEAT-020","A","");
-        new PartApi(client).checkIn(workspaceId,"ENGINE-050","A","");
-        new PartApi(client).checkIn(workspaceId,"ENGINE-100","A","");
-        new PartApi(client).checkIn(workspaceId,"CAR-001","A","");
+        new PartApi(client).checkIn(workspaceId, "SEAT-010", "A", "");
+        new PartApi(client).checkIn(workspaceId, "SEAT-020", "A", "");
+        new PartApi(client).checkIn(workspaceId, "ENGINE-050", "A", "");
+        new PartApi(client).checkIn(workspaceId, "ENGINE-100", "A", "");
+        new PartApi(client).checkIn(workspaceId, "CAR-001", "A", "");
 
     }
 
@@ -566,7 +568,26 @@ public class SampleLoader {
         configurationItemDTO.setDesignItemNumber("CAR-001");
         configurationItemDTO.setId("CAR-001");
         new ProductsApi(client).createConfigurationItem(workspaceId, configurationItemDTO);
-
     }
 
+    private void createBaseline() throws ApiException {
+        ProductBaselineDTO baseline = new ProductBaselineDTO();
+        baseline.setConfigurationItemId("CAR-001");
+        baseline.setName("MyFirstBaseline");
+        baseline.setType(ProductBaselineDTO.TypeEnum.LATEST);
+        new ProductbaselineApi(client).createBaseline(workspaceId,"CAR-001",baseline);
+    }
+
+    private void createProductInstace() throws ApiException {
+
+        List<ProductBaselineDTO> baselines = new ProductbaselineApi(client).getBaselines(workspaceId, "CAR-001");
+        ProductBaselineDTO firstBaselineFound = baselines.get(0);
+
+        ProductInstanceCreationDTO productInstance = new ProductInstanceCreationDTO();
+        productInstance.setConfigurationItemId("CAR-001");
+        productInstance.setSerialNumber("CAR-001-XX001");
+
+        productInstance.setBaselineId(firstBaselineFound.getId());
+        new ProductinstancesApi(client).createProductInstanceMaster(workspaceId, productInstance);
+    }
 }
