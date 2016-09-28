@@ -47,7 +47,7 @@ public class SampleLoader {
 
     }
 
-    public void load() throws ApiException, IOException {
+    public void load() throws ApiException, IOException, InterruptedException {
 
         LOGGER.info("Starting load process ... ");
 
@@ -55,6 +55,7 @@ public class SampleLoader {
         createCallerAccount();
         createWorkspace();
         createOtherAccounts();
+        createGroups();
 
         createMilestones();
         createRolesAndWorkflow();
@@ -95,6 +96,16 @@ public class SampleLoader {
             }
             addUserToWorkspace(pLogin);
         }
+    }
+
+    private void createGroups() throws ApiException {
+        LOGGER.log(Level.INFO, "Creating groups ...");
+        UserGroupDTO group = new UserGroupDTO();
+        group.setWorkspaceId(workspaceId);
+        group.setId("Group1");
+        new WorkspacesApi(client).createGroup(workspaceId,group);
+        group.setId("Group2");
+        new WorkspacesApi(client).createGroup(workspaceId,group);
     }
 
     private void createAccount(String accountLogin) throws ApiException {
@@ -406,7 +417,7 @@ public class SampleLoader {
     }
 
 
-    private void createParts() throws ApiException, IOException {
+    private void createParts() throws ApiException, IOException, InterruptedException {
 
         LOGGER.log(Level.INFO, "Creating parts ...");
 
@@ -534,6 +545,17 @@ public class SampleLoader {
         partIterationDTO.setNumber("ENGINE-100");
         UploadDownloadHelper.uploadNativeCADFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-TrollingMotor.obj"));
         UploadDownloadHelper.uploadAttachedFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-TrollingMotor.mtl"));
+
+        LOGGER.log(Level.INFO, "Waiting for conversion...");
+        // Let the conversion finish
+        Thread.sleep(5000);
+
+        LOGGER.log(Level.INFO, "Checking in parts...");
+        new PartApi(client).checkIn(workspaceId,"SEAT-010","A","");
+        new PartApi(client).checkIn(workspaceId,"SEAT-020","A","");
+        new PartApi(client).checkIn(workspaceId,"ENGINE-050","A","");
+        new PartApi(client).checkIn(workspaceId,"ENGINE-100","A","");
+        new PartApi(client).checkIn(workspaceId,"CAR-001","A","");
 
     }
 
