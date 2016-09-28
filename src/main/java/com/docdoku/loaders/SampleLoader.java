@@ -69,7 +69,7 @@ public class SampleLoader {
         createParts();
         createProducts();
         createBaseline();
-        createProductInstace();
+        createProductInstance();
 
         createRequests();
         createIssues();
@@ -575,10 +575,10 @@ public class SampleLoader {
         baseline.setConfigurationItemId("CAR-001");
         baseline.setName("MyFirstBaseline");
         baseline.setType(ProductBaselineDTO.TypeEnum.LATEST);
-        new ProductbaselineApi(client).createBaseline(workspaceId,"CAR-001",baseline);
+        new ProductbaselineApi(client).createBaseline(workspaceId, "CAR-001", baseline);
     }
 
-    private void createProductInstace() throws ApiException {
+    private void createProductInstance() throws ApiException {
 
         List<ProductBaselineDTO> baselines = new ProductbaselineApi(client).getBaselines(workspaceId, "CAR-001");
         ProductBaselineDTO firstBaselineFound = baselines.get(0);
