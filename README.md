@@ -14,12 +14,12 @@ Clone this project
 
 Run loadSample.sh or loadSample.bat depending on your OS
 
-    ./loadSample.sh [login] [password] [workspaceId] [url]
+    ./loadSample.sh -u login -p password -h url [-w workspaceId]  
     
 Parameters :
 
-* workspaceId : then name of the workspace to be created
-* login : your account name (will be created)
-* password : your account password (will be created)
-* url : url of the DocdokuPLM instance server (http://localhost:8080)
+* login : your account name (will be created) - required
+* password : your account password (will be created) - required
+* url : url of the DocdokuPLM instance server (http://localhost:8080) - required
+* workspaceId : then name of the workspace to be created - optional, will be generated if not specified
 

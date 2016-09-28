@@ -21,41 +21,60 @@
 package com.docdoku.loaders;
 
 import com.docdoku.api.client.ApiException;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
 /**
+ * Program entry, parses arguments from command line, launch the sample load process
+ *
+ * See SampleLoaderCommandLine class for available options
  *
  * @author Morgan GUIMARD
  */
 public class Main {
 
-    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
+    private static final Logger LOGGER = SampleLoaderLogger.getLOGGER();
 
-    private Main(){
+    private Main() {
     }
 
     public static void main(String[] args) throws Exception {
 
-        if (args.length != 4) {
-            LOGGER.log(Level.SEVERE,"Usage : ./loadSample.sh [login] [password] [workspaceId] [url]");
+        SampleLoaderCommandLine commandLine = new SampleLoaderCommandLine();
+        CmdLineParser parser = new CmdLineParser(commandLine);
+
+        try {
+            parser.parseArgument(args);
+        } catch (CmdLineException e) {
+            LOGGER.log(Level.SEVERE, "Usage : ./loadSample.sh -u userLogin -p userPassword -w workspaceId -h host");
             return;
         }
 
-        String login = args[0];
-        String password = args[1];
-        String workspaceId = args[2];
-        String url = args[3];
+        String login = commandLine.getLogin();
+        String password = commandLine.getPassword();
+        String workspaceId = commandLine.getWorkspaceId();
+        String url = commandLine.getUrl();
+
+        // Use generated workspace id if not specified
+        if(null == workspaceId || "".equals(workspaceId.trim())){
+            LOGGER.log(Level.INFO, "No workspace name supplied, generating one...");
+            workspaceId = "wks-" + UUID.randomUUID().toString().substring(0,8);
+            LOGGER.log(Level.INFO, "Using "+ workspaceId + " as workspace name ");
+        }
 
         SampleLoader sampleLoader = new SampleLoader(login, password, workspaceId, url + "/api");
 
         try {
             sampleLoader.load();
-            LOGGER.info("Everything done, you can now connect to DocdokuPLM " + url + "\n" + "Credentials : " + login + "/" + password);
-        } catch (ApiException e){
-            LOGGER.log(Level.SEVERE,"Ooops, something went wrong while loading sample data", e);
+            LOGGER.info("Congratulations ! \n Everything is ok, you can now connect to DocdokuPLM " + url + "\n" + "Credentials : " + login + "/" + password + "\n" + "Workspace: " + workspaceId );
+        } catch (ApiException e) {
+            LOGGER.log(Level.SEVERE, "Ooops, something went wrong while loading sample data", e);
         }
     }
-    
+
 }

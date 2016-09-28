@@ -10,9 +10,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
+ * Some util methods around file names and resources
+ *
  * @author Morgan GUIMARD
  */
 public class SampleLoaderUtils {
+
+    public static final String RESOURCE_PREFIX = "com/docdoku/loaders/";
 
     public static String getDomainName(String url) throws URISyntaxException {
         URI uri = new URI(url);
@@ -21,7 +25,7 @@ public class SampleLoaderUtils {
     }
 
     public static File getFile(String fileName) throws IOException {
-        InputStream resourceAsStream = SampleLoaderUtils.class.getClassLoader().getResourceAsStream("com/docdoku/loaders/" + fileName);
+        InputStream resourceAsStream = SampleLoaderUtils.class.getClassLoader().getResourceAsStream(RESOURCE_PREFIX + fileName);
         return stream2file(resourceAsStream, fileName);
     }
 

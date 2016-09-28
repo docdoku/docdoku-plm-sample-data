@@ -19,14 +19,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * TODO
- * - add Jenkins job
+ * This class uses DocdokuPLM Java API to load sample data to given server url and workspace
  *
  * @author Morgan GUIMARD
  */
 public class SampleLoader {
 
-    private static final Logger LOGGER = Logger.getLogger(SampleLoader.class.getName());
+    private static final Logger LOGGER = SampleLoaderLogger.getLOGGER();
     private static final boolean debug = false;
 
     private String login;
@@ -44,7 +43,6 @@ public class SampleLoader {
         this.url = url;
         guestClient = new DocdokuPLMClient(this.url, debug).getClient();
         client = new DocdokuPLMBasicClient(url, login, password).getClient();
-
     }
 
     public void load() throws ApiException, IOException, InterruptedException {
@@ -52,7 +50,13 @@ public class SampleLoader {
         LOGGER.info("Starting load process ... ");
 
         checkServerAvailability();
-        createCallerAccount();
+
+        try {
+            createCallerAccount();
+        } catch (ApiException e) {
+            LOGGER.log(Level.INFO, "Cannot create account, trying to use given credentials for next operations");
+        }
+
         createWorkspace();
         createOtherAccounts();
         createGroups();
@@ -124,8 +128,8 @@ public class SampleLoader {
         accountDTO.setLanguage("en");
         accountDTO.setLogin(accountLogin);
         accountDTO.setNewPassword(password);
-
         new AccountsApi(guestClient).createAccount(accountDTO);
+
     }
 
     private void addUserToWorkspace(String pLogin) throws ApiException {
@@ -136,7 +140,7 @@ public class SampleLoader {
     }
 
     private void createWorkspace() throws ApiException {
-        LOGGER.log(Level.INFO, "Creating workspaceId ...");
+        LOGGER.log(Level.INFO, "Creating workspace ...");
         WorkspaceDTO workspaceDTO = new WorkspaceDTO();
         workspaceDTO.setId(workspaceId);
         workspaceDTO.setDescription("Some workspaceId created from sample loader");
