@@ -1,14 +1,13 @@
 package com.docdoku.loaders;
 
-import com.docdoku.api.DocdokuPLMBasicClient;
-import com.docdoku.api.DocdokuPLMClient;
+import com.docdoku.api.DocdokuPLMClientFactory;
 import com.docdoku.api.client.ApiClient;
 import com.docdoku.api.client.ApiException;
 import com.docdoku.api.models.*;
 import com.docdoku.api.models.utils.LastIterationHelper;
-import com.docdoku.api.models.utils.UploadDownloadHelper;
 import com.docdoku.api.services.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -41,8 +40,8 @@ public class SampleLoader {
         this.password = password;
         this.workspaceId = workspaceId;
         this.url = url;
-        guestClient = new DocdokuPLMClient(this.url, debug).getClient();
-        client = new DocdokuPLMBasicClient(url, login, password).getClient();
+        guestClient = DocdokuPLMClientFactory.createClient(url);
+        client = DocdokuPLMClientFactory.createJWTClient(url, login, password);
     }
 
     public void load() throws ApiException, IOException, InterruptedException {
@@ -156,17 +155,17 @@ public class SampleLoader {
         template.setReference("Letter");
         template.setDocumentType("Paper");
         template.setMask("LETTER-###");
-        new DocumenttemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
+        new DocumentTemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
 
         template.setReference("Invoice");
         template.setDocumentType("Paper");
         template.setMask("INVOICE-###");
-        new DocumenttemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
+        new DocumentTemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
 
         template.setReference("UserManuals");
         template.setDocumentType("Documentation");
         template.setMask("USER-MAN-###");
-        new DocumenttemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
+        new DocumentTemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
     }
 
     private void createFolders() throws ApiException {
@@ -202,6 +201,7 @@ public class SampleLoader {
     private void createDocuments() throws ApiException, IOException {
         LOGGER.log(Level.INFO, "Creating documents ...");
 
+        FoldersApi foldersApi = new FoldersApi(client);
         // Creation
         DocumentCreationDTO documentCreationDTO = new DocumentCreationDTO();
         documentCreationDTO.setReference("LETTER-001");
@@ -209,29 +209,29 @@ public class SampleLoader {
         documentCreationDTO.setWorkspaceId(workspaceId);
         documentCreationDTO.setTemplateId("Letter");
         documentCreationDTO.setDescription("Some letter created with sample loader");
-        new FoldersApi(client).createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Letters");
+        foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Letters");
 
         documentCreationDTO.setReference("LETTER-002");
         documentCreationDTO.setTitle("An other letter");
-        new FoldersApi(client).createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Letters");
+        foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Letters");
 
         documentCreationDTO.setReference("INVOICE-001");
         documentCreationDTO.setTitle("My first invoice");
         documentCreationDTO.setWorkspaceId(workspaceId);
         documentCreationDTO.setTemplateId("Invoice");
         documentCreationDTO.setDescription("Some invoice created with sample loader");
-        new FoldersApi(client).createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Invoices");
+        foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Invoices");
 
         documentCreationDTO.setReference("INVOICE-002");
         documentCreationDTO.setTitle("A second invoice");
-        new FoldersApi(client).createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Invoices");
+        foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Invoices");
 
         documentCreationDTO.setReference("USER-MAN-001");
         documentCreationDTO.setTitle("User documentation");
         documentCreationDTO.setWorkspaceId(workspaceId);
         documentCreationDTO.setTemplateId("UserManuals");
         documentCreationDTO.setDescription("Some end-user documentation");
-        new FoldersApi(client).createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Documentation");
+        foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Documentation");
 
 
         LOGGER.log(Level.INFO, "Uploading document files...");
@@ -242,27 +242,23 @@ public class SampleLoader {
         documentIterationDTO.setIteration(1);
 
         documentIterationDTO.setDocumentMasterId("LETTER-001");
-        UploadDownloadHelper.uploadAttachedFile(documentIterationDTO, client, SampleLoaderUtils.getFile("letter-001.docx"));
 
-        documentIterationDTO.setDocumentMasterId("LETTER-002");
-        UploadDownloadHelper.uploadAttachedFile(documentIterationDTO, client, SampleLoaderUtils.getFile("letter-002.docx"));
+        DocumentBinaryApi documentBinaryApi = new DocumentBinaryApi(client);
 
-        documentIterationDTO.setDocumentMasterId("INVOICE-001");
-        UploadDownloadHelper.uploadAttachedFile(documentIterationDTO, client, SampleLoaderUtils.getFile("invoice-001.xlsx"));
-
-        documentIterationDTO.setDocumentMasterId("INVOICE-002");
-        UploadDownloadHelper.uploadAttachedFile(documentIterationDTO, client, SampleLoaderUtils.getFile("invoice-002.xlsx"));
-
-        documentIterationDTO.setDocumentMasterId("USER-MAN-001");
-        UploadDownloadHelper.uploadAttachedFile(documentIterationDTO, client, SampleLoaderUtils.getFile("user-man-001.txt"));
+        documentBinaryApi.uploadDocumentFiles(workspaceId, "LETTER-001", "A", 1, SampleLoaderUtils.getFile("letter-001.docx"));
+        documentBinaryApi.uploadDocumentFiles(workspaceId, "LETTER-002", "A", 1, SampleLoaderUtils.getFile("letter-002.docx"));
+        documentBinaryApi.uploadDocumentFiles(workspaceId, "INVOICE-001", "A", 1, SampleLoaderUtils.getFile("invoice-001.xlsx"));
+        documentBinaryApi.uploadDocumentFiles(workspaceId, "INVOICE-002", "A", 1, SampleLoaderUtils.getFile("invoice-002.xlsx"));
+        documentBinaryApi.uploadDocumentFiles(workspaceId, "USER-MAN-001", "A", 1, SampleLoaderUtils.getFile("user-man-001.txt"));
 
         // Check in
         LOGGER.log(Level.INFO, "Checking in documents ...");
-        new DocumentApi(client).checkInDocument(workspaceId, "LETTER-001", "A", "");
-        new DocumentApi(client).checkInDocument(workspaceId, "LETTER-002", "A", "");
-        new DocumentApi(client).checkInDocument(workspaceId, "INVOICE-001", "A", "");
-        new DocumentApi(client).checkInDocument(workspaceId, "INVOICE-002", "A", "");
-        new DocumentApi(client).checkInDocument(workspaceId, "USER-MAN-001", "A", "");
+        DocumentApi documentApi = new DocumentApi(client);
+        documentApi.checkInDocument(workspaceId, "LETTER-001", "A");
+        documentApi.checkInDocument(workspaceId, "LETTER-002", "A");
+        documentApi.checkInDocument(workspaceId, "INVOICE-001", "A");
+        documentApi.checkInDocument(workspaceId, "INVOICE-002", "A");
+        documentApi.checkInDocument(workspaceId, "USER-MAN-001", "A");
     }
 
 
@@ -291,58 +287,58 @@ public class SampleLoader {
 
     private void createRequests() throws ApiException {
         LOGGER.log(Level.INFO, "Creating requests ...");
-
+        ChangeItemsApi changeItemsApi = new ChangeItemsApi(client);
         ChangeRequestDTO changeRequestDTO = new ChangeRequestDTO();
         changeRequestDTO.setWorkspaceId(workspaceId);
 
         changeRequestDTO.setName("REQ-001");
         changeRequestDTO.setDescription("Something needs to be corrected");
         changeRequestDTO.setCategory(ChangeRequestDTO.CategoryEnum.CORRECTIVE);
-        new ChangeitemsApi(client).createRequest(workspaceId, changeRequestDTO);
+        changeItemsApi.createRequest(workspaceId, changeRequestDTO);
 
         changeRequestDTO.setName("REQ-002");
         changeRequestDTO.setDescription("Something needs to be perfected");
         changeRequestDTO.setCategory(ChangeRequestDTO.CategoryEnum.PERFECTIVE);
-        new ChangeitemsApi(client).createRequest(workspaceId, changeRequestDTO);
+        changeItemsApi.createRequest(workspaceId, changeRequestDTO);
     }
 
     private void createIssues() throws ApiException {
         LOGGER.log(Level.INFO, "Creating issues ...");
-
+        ChangeItemsApi changeItemsApi = new ChangeItemsApi(client);
         ChangeIssueDTO changeIssueDTO = new ChangeIssueDTO();
         changeIssueDTO.setWorkspaceId(workspaceId);
 
         changeIssueDTO.setName("ISSUE-001");
         changeIssueDTO.setDescription("Something is wrong");
         changeIssueDTO.setPriority(ChangeIssueDTO.PriorityEnum.HIGH);
-        new ChangeitemsApi(client).createIssue(workspaceId, changeIssueDTO);
+        changeItemsApi.createIssue(workspaceId, changeIssueDTO);
 
         changeIssueDTO.setName("ISSUE-002");
         changeIssueDTO.setDescription("Something is terribly wrong");
         changeIssueDTO.setPriority(ChangeIssueDTO.PriorityEnum.EMERGENCY);
-        new ChangeitemsApi(client).createIssue(workspaceId, changeIssueDTO);
+        changeItemsApi.createIssue(workspaceId, changeIssueDTO);
     }
 
     private void createOrders() throws ApiException {
         LOGGER.log(Level.INFO, "Creating orders ...");
-
+        ChangeItemsApi changeItemsApi = new ChangeItemsApi(client);
         ChangeOrderDTO changeOrderDTO = new ChangeOrderDTO();
         changeOrderDTO.setWorkspaceId(workspaceId);
 
         changeOrderDTO.setName("ORDER-001");
         changeOrderDTO.setDescription("Order for some documents");
         changeOrderDTO.setCategory(ChangeOrderDTO.CategoryEnum.OTHER);
-        new ChangeitemsApi(client).createOrder(workspaceId, changeOrderDTO);
+        changeItemsApi.createOrder(workspaceId, changeOrderDTO);
 
         changeOrderDTO.setName("ORDER-002");
         changeOrderDTO.setDescription("Order for some parts");
         changeOrderDTO.setCategory(ChangeOrderDTO.CategoryEnum.OTHER);
-        new ChangeitemsApi(client).createOrder(workspaceId, changeOrderDTO);
+        changeItemsApi.createOrder(workspaceId, changeOrderDTO);
     }
 
     private void createRolesAndWorkflow() throws ApiException {
         LOGGER.log(Level.INFO, "Creating roles ...");
-
+        RolesApi rolesApi = new RolesApi(client);
         // Roles
         List<UserDTO> designers = new ArrayList<>();
         List<UserDTO> technicians = new ArrayList<>();
@@ -362,11 +358,11 @@ public class SampleLoader {
 
         roleDTO.setName("designers");
         roleDTO.setDefaultAssignedUsers(designers);
-        RoleDTO designerRole = new RolesApi(client).createRole(workspaceId, roleDTO);
+        RoleDTO designerRole = rolesApi.createRole(workspaceId, roleDTO);
 
         roleDTO.setName("technicians");
         roleDTO.setDefaultAssignedUsers(technicians);
-        RoleDTO technicianRole = new RolesApi(client).createRole(workspaceId, roleDTO);
+        RoleDTO technicianRole = rolesApi.createRole(workspaceId, roleDTO);
 
 
         // Workflow
@@ -409,24 +405,24 @@ public class SampleLoader {
 
     private void createPartTemplates() throws ApiException {
         LOGGER.log(Level.INFO, "Creating part templates ...");
-
+        PartTemplatesApi partTemplatesApi = new PartTemplatesApi(client);
         PartTemplateCreationDTO partTemplateCreationDTO = new PartTemplateCreationDTO();
         partTemplateCreationDTO.setWorkspaceId(workspaceId);
 
         partTemplateCreationDTO.setReference("SEATS");
         partTemplateCreationDTO.setMask("SEAT-###");
-        new ParttemplatesApi(client).createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
+        partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
 
         partTemplateCreationDTO.setReference("ENGINES");
         partTemplateCreationDTO.setMask("ENGINE-###");
-        new ParttemplatesApi(client).createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
+        partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
     }
 
 
     private void createParts() throws ApiException, IOException, InterruptedException {
 
         LOGGER.log(Level.INFO, "Creating parts ...");
-
+        PartsApi partsApi = new PartsApi(client);
         PartCreationDTO part = new PartCreationDTO();
 
         part.setWorkspaceId(workspaceId);
@@ -436,25 +432,25 @@ public class SampleLoader {
         part.setTemplateId("SEATS");
         part.setNumber("SEAT-010");
         part.setName("front seat");
-        new PartsApi(client).createNewPart(workspaceId, part);
+        partsApi.createNewPart(workspaceId, part);
         part.setNumber("SEAT-020");
         part.setName("back seat");
-        new PartsApi(client).createNewPart(workspaceId, part);
+        partsApi.createNewPart(workspaceId, part);
 
         part.setTemplateId("ENGINES");
         part.setNumber("ENGINE-050");
         part.setName("50cc engine");
-        new PartsApi(client).createNewPart(workspaceId, part);
+        partsApi.createNewPart(workspaceId, part);
         part.setNumber("ENGINE-100");
         part.setName("100cc engine");
-        new PartsApi(client).createNewPart(workspaceId, part);
+        partsApi.createNewPart(workspaceId, part);
 
         // Create an assembly
 
         part.setNumber("CAR-001");
         part.setName("A sample assembly");
         part.setTemplateId(null);
-        PartRevisionDTO assembly = new PartsApi(client).createNewPart(workspaceId, part);
+        PartRevisionDTO assembly = partsApi.createNewPart(workspaceId, part);
         PartIterationDTO lastIteration = LastIterationHelper.getLastIteration(assembly);
 
         List<PartUsageLinkDTO> links = new ArrayList<>();
@@ -526,7 +522,7 @@ public class SampleLoader {
         lastIteration.setComponents(links);
         lastIteration.setIterationNote("Creating assembly");
 
-        new PartsApi(client).updatePartIteration(workspaceId, assembly.getNumber(), "A", 1, lastIteration);
+        partsApi.updatePartIteration(workspaceId, assembly.getNumber(), "A", 1, lastIteration);
 
         // Upload 3D files
         LOGGER.log(Level.INFO, "Uploading 3D files...");
@@ -537,32 +533,42 @@ public class SampleLoader {
         partIterationDTO.setIteration(1);
 
         partIterationDTO.setNumber("SEAT-010");
-        UploadDownloadHelper.uploadNativeCADFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-FrontSeat.obj"));
-        UploadDownloadHelper.uploadAttachedFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-FrontSeat.mtl"));
+        uploadNativeCADFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-FrontSeat.obj"));
+        uploadAttachedFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-FrontSeat.mtl"));
 
         partIterationDTO.setNumber("SEAT-020");
-        UploadDownloadHelper.uploadNativeCADFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-BackSeat.obj"));
-        UploadDownloadHelper.uploadAttachedFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-BackSeat.mtl"));
+        uploadNativeCADFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-BackSeat.obj"));
+        uploadAttachedFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-BackSeat.mtl"));
 
         partIterationDTO.setNumber("ENGINE-050");
-        UploadDownloadHelper.uploadNativeCADFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-OutboardMotor.obj"));
-        UploadDownloadHelper.uploadAttachedFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-OutboardMotor.mtl"));
+        uploadNativeCADFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-OutboardMotor.obj"));
+        uploadAttachedFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-OutboardMotor.mtl"));
 
         partIterationDTO.setNumber("ENGINE-100");
-        UploadDownloadHelper.uploadNativeCADFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-TrollingMotor.obj"));
-        UploadDownloadHelper.uploadAttachedFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-TrollingMotor.mtl"));
+        uploadNativeCADFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-TrollingMotor.obj"));
+        uploadAttachedFile(partIterationDTO, client, SampleLoaderUtils.getFile("BassBoat-TrollingMotor.mtl"));
 
         LOGGER.log(Level.INFO, "Waiting for conversion...");
         // Let the conversion finish
         Thread.sleep(5000);
 
         LOGGER.log(Level.INFO, "Checking in parts...");
-        new PartApi(client).checkIn(workspaceId, "SEAT-010", "A", "");
-        new PartApi(client).checkIn(workspaceId, "SEAT-020", "A", "");
-        new PartApi(client).checkIn(workspaceId, "ENGINE-050", "A", "");
-        new PartApi(client).checkIn(workspaceId, "ENGINE-100", "A", "");
-        new PartApi(client).checkIn(workspaceId, "CAR-001", "A", "");
+        new PartApi(client).checkIn(workspaceId, "SEAT-010", "A");
+        new PartApi(client).checkIn(workspaceId, "SEAT-020", "A");
+        new PartApi(client).checkIn(workspaceId, "ENGINE-050", "A");
+        new PartApi(client).checkIn(workspaceId, "ENGINE-100", "A");
+        new PartApi(client).checkIn(workspaceId, "CAR-001", "A");
 
+    }
+
+    private void uploadAttachedFile(PartIterationDTO partIterationDTO, ApiClient client, File file) throws ApiException {
+        new PartBinaryApi(client).uploadAttachedFiles(partIterationDTO.getWorkspaceId(),
+                partIterationDTO.getNumber(), partIterationDTO.getVersion(), 1, file);
+    }
+
+    private void uploadNativeCADFile(PartIterationDTO partIterationDTO, ApiClient client, File file) throws ApiException {
+        new PartBinaryApi(client).uploadNativeCADFile(partIterationDTO.getWorkspaceId(),
+                partIterationDTO.getNumber(), partIterationDTO.getVersion(), 1, file);
     }
 
     private void createProducts() throws ApiException {
@@ -579,12 +585,12 @@ public class SampleLoader {
         baseline.setConfigurationItemId("CAR-001");
         baseline.setName("MyFirstBaseline");
         baseline.setType(ProductBaselineDTO.TypeEnum.LATEST);
-        new ProductbaselineApi(client).createBaseline(workspaceId, "CAR-001", baseline);
+        new ProductBaselineApi(client).createProductBaseline(workspaceId, baseline);
     }
 
     private void createProductInstance() throws ApiException {
 
-        List<ProductBaselineDTO> baselines = new ProductbaselineApi(client).getBaselines(workspaceId, "CAR-001");
+        List<ProductBaselineDTO> baselines = new ProductBaselineApi(client).getProductBaselinesForProduct(workspaceId, "CAR-001");
         ProductBaselineDTO firstBaselineFound = baselines.get(0);
 
         ProductInstanceCreationDTO productInstance = new ProductInstanceCreationDTO();
@@ -592,6 +598,6 @@ public class SampleLoader {
         productInstance.setSerialNumber("CAR-001-XX001");
 
         productInstance.setBaselineId(firstBaselineFound.getId());
-        new ProductinstancesApi(client).createProductInstanceMaster(workspaceId, productInstance);
+        new ProductInstancesApi(client).createProductInstanceMaster(workspaceId, productInstance);
     }
 }
