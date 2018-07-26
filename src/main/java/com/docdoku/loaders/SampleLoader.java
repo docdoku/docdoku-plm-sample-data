@@ -1,9 +1,30 @@
+/*
+ * DocDoku, Professional Open Source
+ * Copyright 2006 - 2017 DocDoku SARL
+ *
+ * This file is part of DocDokuPLM.
+ *
+ * DocDokuPLM is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * DocDokuPLM is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with DocDokuPLM.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.docdoku.loaders;
 
 import com.docdoku.api.DocdokuPLMClientFactory;
 import com.docdoku.api.client.ApiClient;
 import com.docdoku.api.client.ApiException;
 import com.docdoku.api.models.*;
+import com.docdoku.api.models.utils.AttributesHelper;
 import com.docdoku.api.models.utils.LastIterationHelper;
 import com.docdoku.api.services.*;
 
@@ -411,10 +432,22 @@ public class SampleLoader {
 
         partTemplateCreationDTO.setReference("SEATS");
         partTemplateCreationDTO.setMask("SEAT-###");
+
+        List<InstanceAttributeTemplateDTO> attributes = new ArrayList<>();
+        InstanceAttributeTemplateDTO weight = AttributesHelper.createInstanceAttributeTemplate(
+                InstanceAttributeTemplateDTO.AttributeTypeEnum.NUMBER, "weight", true, true);
+        InstanceAttributeTemplateDTO price = AttributesHelper.createInstanceAttributeTemplate(
+                InstanceAttributeTemplateDTO.AttributeTypeEnum.NUMBER, "price", true, true);
+
+        attributes.add(price);
+        attributes.add(weight);
+
+        partTemplateCreationDTO.setAttributeTemplates(attributes);
         partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
 
         partTemplateCreationDTO.setReference("ENGINES");
         partTemplateCreationDTO.setMask("ENGINE-###");
+        partTemplateCreationDTO.setAttributeTemplates(attributes);
         partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
     }
 
@@ -428,23 +461,25 @@ public class SampleLoader {
         part.setWorkspaceId(workspaceId);
         part.setDescription("Sample part create with sample loader");
 
-
         part.setTemplateId("SEATS");
         part.setNumber("SEAT-010");
         part.setName("front seat");
-        partsApi.createNewPart(workspaceId, part);
+        PartRevisionDTO frontSeat = partsApi.createNewPart(workspaceId, part);
+        addAttributes(partsApi, frontSeat);
         part.setNumber("SEAT-020");
         part.setName("back seat");
-        partsApi.createNewPart(workspaceId, part);
+        PartRevisionDTO backSeat = partsApi.createNewPart(workspaceId, part);
+        addAttributes(partsApi, backSeat);
 
         part.setTemplateId("ENGINES");
         part.setNumber("ENGINE-050");
         part.setName("50cc engine");
-        partsApi.createNewPart(workspaceId, part);
+        PartRevisionDTO engine50 = partsApi.createNewPart(workspaceId, part);
+        addAttributes(partsApi, engine50);
         part.setNumber("ENGINE-100");
         part.setName("100cc engine");
-        partsApi.createNewPart(workspaceId, part);
-
+        PartRevisionDTO engine100 = partsApi.createNewPart(workspaceId, part);
+        addAttributes(partsApi, engine100);
         // Create an assembly
 
         part.setNumber("CAR-001");
@@ -558,6 +593,24 @@ public class SampleLoader {
         new PartApi(client).checkIn(workspaceId, "ENGINE-050", "A");
         new PartApi(client).checkIn(workspaceId, "ENGINE-100", "A");
         new PartApi(client).checkIn(workspaceId, "CAR-001", "A");
+
+    }
+
+    private void addAttributes(PartsApi partsApi, PartRevisionDTO partRevision) throws ApiException {
+
+        PartIterationDTO lastIteration = LastIterationHelper.getLastIteration(partRevision);
+
+        // Define weight and price
+        List<InstanceAttributeDTO> attributes = lastIteration.getInstanceAttributes();
+
+        if (attributes.size() == 2) {
+            attributes.get(0).setValue(String.valueOf(Math.random() * 20));
+            attributes.get(1).setValue(String.valueOf(Math.random() * 20));
+        } else {
+            LOGGER.log(Level.WARNING, "Attributes have not been found");
+        }
+
+        partsApi.updatePartIteration(workspaceId, partRevision.getNumber(), "A", 1, lastIteration);
 
     }
 
