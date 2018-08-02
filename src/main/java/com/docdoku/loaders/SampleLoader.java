@@ -20,7 +20,7 @@
 
 package com.docdoku.loaders;
 
-import com.docdoku.api.DocdokuPLMClientFactory;
+import com.docdoku.api.DocDokuPLMClientFactory;
 import com.docdoku.api.client.ApiClient;
 import com.docdoku.api.client.ApiException;
 import com.docdoku.api.models.*;
@@ -39,7 +39,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * This class uses DocdokuPLM Java API to load sample data to given server url and workspace
+ * This class uses DocDokuPLM Java API to load sample data to given server url and workspace
  *
  * @author Morgan GUIMARD
  */
@@ -61,8 +61,8 @@ public class SampleLoader {
         this.password = password;
         this.workspaceId = workspaceId;
         this.url = url;
-        guestClient = DocdokuPLMClientFactory.createClient(url);
-        client = DocdokuPLMClientFactory.createJWTClient(url, login, password);
+        guestClient = DocDokuPLMClientFactory.createClient(url);
+        client = DocDokuPLMClientFactory.createJWTClient(url, login, password);
     }
 
     public void load() throws ApiException, IOException, InterruptedException {
@@ -429,9 +429,9 @@ public class SampleLoader {
         PartTemplatesApi partTemplatesApi = new PartTemplatesApi(client);
         PartTemplateCreationDTO partTemplateCreationDTO = new PartTemplateCreationDTO();
         partTemplateCreationDTO.setWorkspaceId(workspaceId);
-
         partTemplateCreationDTO.setReference("SEATS");
         partTemplateCreationDTO.setMask("SEAT-###");
+        partTemplateCreationDTO.setAttributesLocked(true);
 
         List<InstanceAttributeTemplateDTO> attributes = new ArrayList<>();
         InstanceAttributeTemplateDTO weight = AttributesHelper.createInstanceAttributeTemplate(

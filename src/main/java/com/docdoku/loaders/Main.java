@@ -71,7 +71,7 @@ public class Main {
 
         try {
             sampleLoader.load();
-            LOGGER.info("Congratulations ! \n Everything is ok, you can now connect to DocdokuPLM " + url + "\n" + "Credentials : " + login + "/" + password + "\n" + "Workspace: " + workspaceId );
+            LOGGER.info("Congratulations ! \n Everything is ok, you can now connect to DocDokuPLM " + url + "\n" + "Credentials : " + login + "/" + password + "\n" + "Workspace: " + workspaceId );
         } catch (ApiException e) {
             LOGGER.log(Level.SEVERE, "Ooops, something went wrong while loading sample data", e);
         }

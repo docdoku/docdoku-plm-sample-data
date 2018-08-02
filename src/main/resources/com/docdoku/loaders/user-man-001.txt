@@ -1,4 +1,4 @@
 # Success !
 
-This file has been uploaded with DocdokuPLM sample Loader
+This file has been uploaded with DocDokuPLM sample Loader
 
