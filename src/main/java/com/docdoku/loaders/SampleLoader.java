@@ -110,9 +110,11 @@ public class SampleLoader {
 
 
         createRequests();
+        setRequestsAcl();
         createIssues();
-        //setIssuesAcl();
+        setIssuesAcl();
         createOrders();
+        setOrdersAcl();
 
         checkoutParts();
 
@@ -645,11 +647,35 @@ public class SampleLoader {
         List<ChangeIssueDTO> changeIssueDTOs = changeItemApi.getIssues(workspaceId);
         ACLDTO aclDto = new ACLDTO();
         aclDto.setGroupEntries(generateACLEntries_FullAccesForGroupContainAdminWks());
-
         for(ChangeIssueDTO chageIssueDTO: changeIssueDTOs) {
 
             changeItemApi.updateChangeIssueACL(workspaceId, chageIssueDTO.getId(), aclDto);
-            LOGGER.log(Level.INFO, "updated milestone :" + chageIssueDTO.getId());
+        }
+    }
+
+    private void setRequestsAcl() throws ApiException {
+
+        LOGGER.log(Level.INFO, "create access for request");
+        ChangeItemsApi changeItemApi = new ChangeItemsApi(client);
+        List<ChangeRequestDTO> changeRequestDTOs = changeItemApi.getRequests(workspaceId);
+        ACLDTO aclDto = new ACLDTO();
+        aclDto.setGroupEntries(generateACLEntries_FullAccesForGroupContainAdminWks());
+        for(ChangeRequestDTO chageRequestDTO: changeRequestDTOs) {
+
+            changeItemApi.updateChangeRequestACL(workspaceId, chageRequestDTO.getId(), aclDto);
+        }
+    }
+
+    private void setOrdersAcl() throws ApiException {
+
+        LOGGER.log(Level.INFO, "create access for orders");
+        ChangeItemsApi changeItemApi = new ChangeItemsApi(client);
+        List<ChangeOrderDTO> changeOrderDTOs = changeItemApi.getOrders(workspaceId);
+        ACLDTO aclDto = new ACLDTO();
+        aclDto.setGroupEntries(generateACLEntries_FullAccesForGroupContainAdminWks());
+        for(ChangeOrderDTO chageOrderDTO: changeOrderDTOs) {
+
+            changeItemApi.updateChangeOrderACL(workspaceId, chageOrderDTO.getId(), aclDto);
         }
     }
 
