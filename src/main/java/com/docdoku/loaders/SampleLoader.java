@@ -110,11 +110,11 @@ public class SampleLoader {
 
 
         createRequests();
-        //setRequestsAcl();
+        setRequestsAcl();
         createIssues();
-       // setIssuesAcl();
+        setIssuesAcl();
         createOrders();
-        //setOrdersAcl();
+        setOrdersAcl();
 
         checkoutParts();
 
