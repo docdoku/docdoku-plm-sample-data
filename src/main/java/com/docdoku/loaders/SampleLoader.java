@@ -110,11 +110,11 @@ public class SampleLoader {
 
 
         createRequests();
-        setRequestsAcl();
+        //setRequestsAcl();
         createIssues();
-        setIssuesAcl();
+       // setIssuesAcl();
         createOrders();
-        setOrdersAcl();
+        //setOrdersAcl();
 
         checkoutParts();
 
@@ -858,12 +858,12 @@ public class SampleLoader {
         partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
 
         partTemplateCreationDTO.setReference("WINDOW");
-        partTemplateCreationDTO.setMask("WINDOW-###");
+        partTemplateCreationDTO.setMask("WHEEL-###");
         partTemplateCreationDTO.setAttributeTemplates(attributes);
         partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
 
         partTemplateCreationDTO.setReference("LOCK");
-        partTemplateCreationDTO.setMask("LOCK-###");
+        partTemplateCreationDTO.setMask("AMORTIZER-###");
         partTemplateCreationDTO.setAttributeTemplates(attributes);
         partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
     }
@@ -963,7 +963,7 @@ public class SampleLoader {
         passengerSeatCadInstance.setRx(0.0);
         passengerSeatCadInstance.setRy(0.0);
         passengerSeatCadInstance.setRz(0.0);
-        passengerSeatCadInstance.setTx(20.0);
+        passengerSeatCadInstance.setTx(0.0);
         passengerSeatCadInstance.setTy(0.0);
         passengerSeatCadInstance.setTz(0.0);
 
@@ -973,7 +973,7 @@ public class SampleLoader {
         engineCadInstance.setRz(0.0);
         engineCadInstance.setTx(0.0);
         engineCadInstance.setTy(0.0);
-        engineCadInstance.setTz(50.0);
+        engineCadInstance.setTz(0.0);
 
         List<CADInstanceDTO> driverSeatCadInstances = new ArrayList<>();
         driverSeatCadInstances.add(driverSeatCadInstance);
@@ -1089,13 +1089,13 @@ public class SampleLoader {
 
 
     //inspired by test which located here :  com.docdoku.api.ProductApiTest
-    private void createDoorProduct() throws ApiException {
+    private void createDoorProduct() throws ApiException, IOException, InterruptedException {
 
         LOGGER.log(Level.INFO, "Creating the door Product ...");
         PartsApi partsApi = new PartsApi(client);
         PartApi partApi = new PartApi(client);
         ProductsApi productsApi = new ProductsApi(client);
-        String[] partsNumber =  {"DOOR-001","WINDOW-001","LOCK-001"};
+        String[] partsNumber =  {"DOOR-001","WHEEL-001","AMORTIZER-001"};
 
         //ACLS set up
 
@@ -1134,8 +1134,6 @@ public class SampleLoader {
         partCreationDTO.setNumber(partsNumber[2]);
         partCreationDTO.setName("Left front lock");
 
-        //Missing CAD and attached files ( don't forget to add them when issue related will be fix)
-
         PartRevisionDTO leftLock =  partsApi.createNewPart(workspaceId,partCreationDTO);
         addAttributes(partsApi,leftLock);
 
@@ -1148,31 +1146,69 @@ public class SampleLoader {
         PartIterationDTO doorIterationDto = LastIterationHelper.getLastIteration(doorRevisionDto);
 
         List<PartUsageLinkDTO> components =  new ArrayList<>();
-
         PartUsageLinkDTO windowLink =  new PartUsageLinkDTO();
+
         ComponentDTO windowComponent = new ComponentDTO();
         windowComponent.setNumber(partsNumber[1]);
         windowComponent.setAmount(1.0);
         windowComponent.setVersion("A");
-        windowComponent.setOptional(true);
         windowComponent.setPartUsageLinkReferenceDescription("DOOR -> WINDOWS");
         windowLink.setComponent(windowComponent);
+        windowLink.setAmount(1.0);
         windowLink.setOptional(true);
-        components.add(windowLink);
 
         PartUsageLinkDTO lockLink =  new PartUsageLinkDTO();
         ComponentDTO lockComponent = new ComponentDTO();
+
         lockComponent.setNumber(partsNumber[2]);
         lockComponent.setAmount(1.0);
         lockComponent.setVersion("A");
-        lockComponent.setOptional(true);
         lockComponent.setPartUsageLinkReferenceDescription("DOOR -> LOCK");
+        lockLink.setAmount(1.0);
         lockLink.setComponent(lockComponent);
         lockLink.setOptional(true);
-        components.add(lockLink);
+
         doorIterationDto.setComponents(components);
 
+        CADInstanceDTO windowsCadInstance = new CADInstanceDTO();
+        windowsCadInstance.setRx(0.0);
+        windowsCadInstance.setRy(0.0);
+        windowsCadInstance.setRz(0.0);
+        windowsCadInstance.setTx(20.0);
+        windowsCadInstance.setTy(0.0);
+        windowsCadInstance.setTz(0.0);
+
+        CADInstanceDTO lockCadInstance = new CADInstanceDTO();
+        lockCadInstance.setRx(0.0);
+        lockCadInstance.setRy(0.0);
+        lockCadInstance.setRz(0.0);
+        lockCadInstance.setTx(0.0);
+        lockCadInstance.setTy(0.0);
+        lockCadInstance.setTz(-50.0);
+
+        List<CADInstanceDTO> windowsCadInstances = new ArrayList<>();
+        windowsCadInstances.add(windowsCadInstance);
+        windowLink.setCadInstances(windowsCadInstances);
+
+        List<CADInstanceDTO> lockCadInstances = new ArrayList<>();
+        lockCadInstances.add(lockCadInstance);
+        lockLink.setCadInstances(lockCadInstances);
+
+        components.add(windowLink);
+        components.add(lockLink);
+
         partApi.updatePartIteration(workspaceId,partsNumber[0],"A",1,doorIterationDto);
+
+        LOGGER.log(Level.INFO, "Uploading 3D files...");
+
+        doorIterationDto.setNumber(partsNumber[1]);
+        uploadNativeCADFile(doorIterationDto, client, SampleLoaderUtils.getFile("treckter.obj"));
+        uploadAttachedFile(doorIterationDto, client, SampleLoaderUtils.getFile("BassBoat-FrontSeat.mtl"));
+
+        doorIterationDto.setNumber(partsNumber[2]);
+        uploadNativeCADFile(doorIterationDto, client, SampleLoaderUtils.getFile("amortizer.obj"));
+        uploadAttachedFile(doorIterationDto, client, SampleLoaderUtils.getFile("BassBoat-BackSeat.mtl"));
+
         for(String s : partsNumber){
 
             partApi.checkIn(workspaceId,s,"A");
@@ -1180,7 +1216,7 @@ public class SampleLoader {
 
         //Create the product
         ConfigurationItemDTO product = new ConfigurationItemDTO();
-        product.setId("DOOR-001");
+        product.setId(partsNumber[0]);
         product.setDesignItemNumber(partsNumber[0]);
         product.setDescription("GENERATED FROM SAMPLE DATA FOR TEST");
         product.setWorkspaceId(workspaceId);
@@ -1195,11 +1231,13 @@ public class SampleLoader {
         baseline.setType(ProductBaselineDTO.TypeEnum.LATEST);
         baseline.setName("DOOR-BASELINE");
         baseline.setConfigurationItemId(product.getId());
+
         for(PartUsageLinkDTO puldto : doorIterationDto.getComponents() ){
 
             useOptionalLinks.add("-1-" + puldto.getFullId());
         }
         baseline.setOptionalUsageLinks(useOptionalLinks);
+        baseline.setSubstituteLinks(useOptionalLinks);
 
         ComponentDTO structure = productsApi.filterProductStructure(workspaceId,
                 product.getId(), "wip", "-1", -1, null, true);
@@ -1216,6 +1254,8 @@ public class SampleLoader {
         baseline.setPathToPathLinks(product.getPathToPathLinks());
 
         new ProductBaselineApi(client).createProductBaseline(workspaceId,baseline);
+        LOGGER.log(Level.INFO, "Waiting for conversion...");
+        Thread.sleep(5000);
     }
 
     private void createConfiguration() throws ApiException {
@@ -1353,8 +1393,8 @@ public class SampleLoader {
         LOGGER.log(Level.INFO, "Doing checkout on some parts and documents...");
         PartApi partApi = new PartApi(client);
         partApi.checkOut(workspaceId,"DOOR-001","A");
-        partApi.checkOut(workspaceId,"LOCK-001","A");
-        partApi.checkOut(workspaceId,"WINDOW-001","A");
+        partApi.checkOut(workspaceId,"WHEEL-001","A");
+        partApi.checkOut(workspaceId,"AMORTIZER-001","A");
 
         ApiClient joe = DocDokuPLMClientFactory.createJWTClient(url, "joe", "test");
         partApi.setApiClient(joe);
