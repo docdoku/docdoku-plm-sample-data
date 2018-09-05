@@ -1276,11 +1276,11 @@ public class SampleLoader {
         LOGGER.log(Level.INFO, "Uploading 3D files...");
 
         doorIterationDto.setNumber(partsNumber[1]);
-        uploadNativeCADFile(doorIterationDto, client, SampleLoaderUtils.getFile("treckter.obj"));
+        uploadNativeCADFile(doorIterationDto, client, SampleLoaderUtils.getFile("BassBoat-TrollingMotor.obj"));
         uploadAttachedFile(doorIterationDto, client, SampleLoaderUtils.getFile("BassBoat-FrontSeat.mtl"));
 
         doorIterationDto.setNumber(partsNumber[2]);
-        uploadNativeCADFile(doorIterationDto, client, SampleLoaderUtils.getFile("amortizer.obj"));
+        uploadNativeCADFile(doorIterationDto, client, SampleLoaderUtils.getFile("BassBoat-OutboardMotor.obj"));
         uploadAttachedFile(doorIterationDto, client, SampleLoaderUtils.getFile("BassBoat-BackSeat.mtl"));
 
         for(String s : partsNumber){
