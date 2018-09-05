@@ -115,6 +115,8 @@ public class SampleLoader {
         setIssuesAcl();
         createOrders();
         setOrdersAcl();
+        updateAffectedPartInOrder();
+        subscribeGroupToTag();
 
         checkoutParts();
 
@@ -187,6 +189,32 @@ public class SampleLoader {
         userDTO.setLogin(login);
         userDTO.setMembership(UserDTO.MembershipEnum.FULL_ACCESS);
         workspacesApi.addUser(workspaceId,userDTO,group1);
+    }
+
+
+    private void subscribeGroupToTag() throws  ApiException{
+        LOGGER.log(Level.INFO, "subscribe group1 and group2 to tag : API....");
+        WorkspacesApi workspacesApi = new WorkspacesApi(client);
+
+        List<UserGroupDTO> groupDTOs = workspacesApi.getGroups(workspaceId);
+        List<TagDTO> tags = workspacesApi.getTagsInWorkspace(workspaceId);
+
+        TagSubscriptionDTO tagSubscriptionDTO = new TagSubscriptionDTO();
+        tagSubscriptionDTO.setOnIterationChange(true);
+        tagSubscriptionDTO.setOnStateChange(true);
+
+        for(UserGroupDTO ugdto : groupDTOs){
+
+            if(group1.equals(ugdto.getId()) || group2.equals(ugdto.getId())) {
+
+                tagSubscriptionDTO.setTag("API");
+                workspacesApi.updateUserGroupSubscription(workspaceId, ugdto.getId(), tagSubscriptionDTO.getTag(), tagSubscriptionDTO);
+            }else if(group3.equals(ugdto.getId())){
+
+                tagSubscriptionDTO.setTag("internal");
+                workspacesApi.updateUserGroupSubscription(workspaceId,ugdto.getId(),tagSubscriptionDTO.getTag(),tagSubscriptionDTO);
+            }
+        }
     }
 
     private void enableUserInworkSpace() throws ApiException {
@@ -612,10 +640,12 @@ public class SampleLoader {
         changeRequestDTO.setName("REQ-001");
         changeRequestDTO.setDescription("Something needs to be corrected");
         changeRequestDTO.setCategory(ChangeRequestDTO.CategoryEnum.CORRECTIVE);
+        changeRequestDTO.setAssignee("joe");
         changeItemsApi.createRequest(workspaceId, changeRequestDTO);
 
         changeRequestDTO.setName("REQ-002");
         changeRequestDTO.setDescription("Something needs to be perfected");
+        changeRequestDTO.setAssignee("bill");
         changeRequestDTO.setCategory(ChangeRequestDTO.CategoryEnum.PERFECTIVE);
         changeItemsApi.createRequest(workspaceId, changeRequestDTO);
     }
@@ -679,6 +709,46 @@ public class SampleLoader {
         }
     }
 
+
+    private void updateAffectedPartInOrder() throws ApiException{
+        LOGGER.log(Level.INFO, "Affect some parts to orders");
+        ChangeItemsApi changeItemApi = new ChangeItemsApi(client);
+        List<ChangeOrderDTO> changeOrderDTOs = changeItemApi.getOrders(workspaceId);
+
+        WorkspacesApi workspacesApi = new WorkspacesApi(client);
+
+        PartRevisionDTO wheelRevision = workspacesApi.getLatestPartRevision(workspaceId,  "WHEEL-001");
+        PartIterationDTO wheelIteration = LastIterationHelper.getLastIteration(wheelRevision);
+
+
+        //affect parts
+        PartRevisionDTO amortizerRevision = new WorkspacesApi(client).getLatestPartRevision(workspaceId,  "AMORTIZER-001");
+        PartIterationDTO amortizerIteration = LastIterationHelper.getLastIteration(amortizerRevision);
+
+        List<PartIterationDTO> iterationDTOs =  new ArrayList<>();
+        iterationDTOs.add(amortizerIteration);
+        iterationDTOs.add(wheelIteration);
+
+        PartIterationListDTO partIterationListDTO =  new PartIterationListDTO();
+        partIterationListDTO.setParts(iterationDTOs);
+
+        for(ChangeOrderDTO chageOrderDTO: changeOrderDTOs) {
+
+            changeItemApi.saveChangeOrderAffectedParts(workspaceId,chageOrderDTO.getId(),partIterationListDTO);
+        }
+
+        LOGGER.log(Level.INFO, "Affect some requests to orders");
+        //affect request
+        List<ChangeRequestDTO> changeRequestDTOs = workspacesApi.getRequests(workspaceId);
+        ChangeRequestListDTO changeRequestListDTO = new ChangeRequestListDTO();
+
+        changeRequestListDTO.setRequests(changeRequestDTOs);
+        for(ChangeOrderDTO chageOrderDTO: changeOrderDTOs) {
+
+            changeItemApi.saveAffectedRequests(workspaceId,chageOrderDTO.getId(),changeRequestListDTO);
+        }
+    }
+
     private void createOrders() throws ApiException {
         LOGGER.log(Level.INFO, "Creating orders ...");
         ChangeItemsApi changeItemsApi = new ChangeItemsApi(client);
@@ -687,11 +757,15 @@ public class SampleLoader {
 
         changeOrderDTO.setName("ORDER-001");
         changeOrderDTO.setDescription("Order for some documents");
-        changeOrderDTO.setCategory(ChangeOrderDTO.CategoryEnum.OTHER);
+        changeOrderDTO.setCategory(ChangeOrderDTO.CategoryEnum.PERFECTIVE);
+        changeOrderDTO.setAssignee("mickey");
+        changeOrderDTO.setPriority(ChangeOrderDTO.PriorityEnum.EMERGENCY);
         changeItemsApi.createOrder(workspaceId, changeOrderDTO);
 
         changeOrderDTO.setName("ORDER-002");
         changeOrderDTO.setDescription("Order for some parts");
+        changeOrderDTO.setAssignee("rob");
+        changeOrderDTO.setPriority(ChangeOrderDTO.PriorityEnum.MEDIUM);
         changeOrderDTO.setCategory(ChangeOrderDTO.CategoryEnum.OTHER);
         changeItemsApi.createOrder(workspaceId, changeOrderDTO);
     }
