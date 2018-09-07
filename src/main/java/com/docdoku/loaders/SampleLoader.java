@@ -119,6 +119,7 @@ public class SampleLoader {
         subscribeGroupToTag();
 
         checkoutParts();
+        createOrganization();
 
     }
 
@@ -195,7 +196,6 @@ public class SampleLoader {
     private void subscribeGroupToTag() throws  ApiException{
         LOGGER.log(Level.INFO, "subscribe group1 and group2 to tag : API....");
         WorkspacesApi workspacesApi = new WorkspacesApi(client);
-
         List<UserGroupDTO> groupDTOs = workspacesApi.getGroups(workspaceId);
         List<TagDTO> tags = workspacesApi.getTagsInWorkspace(workspaceId);
 
@@ -1497,5 +1497,31 @@ public class SampleLoader {
         documentApi.setApiClient(bill);
         documentApi.checkOutDocument(workspaceId,"LETTER-001","A");
         documentApi.checkOutDocument(workspaceId,"LETTER-002","A");
+    }
+
+    private void createOrganization() throws ApiException {
+        LOGGER.log(Level.INFO, "Creating organization for "+login+"...");
+        OrganizationsApi organizationsApi = new OrganizationsApi(client);
+        OrganizationDTO organizationDTO = new OrganizationDTO();
+
+        //create the organization
+        organizationDTO.setName("Organization Test");
+        organizationDTO.setDescription("Organization created from sample");
+        organizationDTO.setOwner(login);
+        organizationsApi.createOrganization(organizationDTO);
+
+        //add members
+        LOGGER.log(Level.INFO, "add members to organization...");
+        List<UserDTO> members = new ArrayList<>();
+        UserDTO userDTO = new UserDTO();
+        int limit = 0;
+        for(String user :  logins){
+
+            userDTO.setName(user);
+            userDTO.setLogin(user);
+            organizationsApi.addMember(userDTO);
+            if(limit == 2)break;
+            limit++;
+        }
     }
 }
