@@ -86,8 +86,10 @@ public class SampleLoader {
         createOtherAccounts();
         createGroups();
         setAccessPermissionForGroups();
-        enableUserInworkSpace();
+        enableUserInworkspace();
         setAccessPermissionsForUser();
+
+        createOrganization();
 
         createMilestones();
         setMilestoneAcl();
@@ -119,7 +121,6 @@ public class SampleLoader {
         subscribeGroupToTag();
 
         checkoutParts();
-        createOrganization();
 
     }
 
@@ -207,17 +208,17 @@ public class SampleLoader {
 
             if(group1.equals(ugdto.getId()) || group2.equals(ugdto.getId())) {
 
-                tagSubscriptionDTO.setTag("API");
+                tagSubscriptionDTO.setTag(tags.get(0).getLabel());
                 workspacesApi.updateUserGroupSubscription(workspaceId, ugdto.getId(), tagSubscriptionDTO.getTag(), tagSubscriptionDTO);
             }else if(group3.equals(ugdto.getId())){
 
-                tagSubscriptionDTO.setTag("internal");
+                tagSubscriptionDTO.setTag(tags.get(1).getLabel());
                 workspacesApi.updateUserGroupSubscription(workspaceId,ugdto.getId(),tagSubscriptionDTO.getTag(),tagSubscriptionDTO);
             }
         }
     }
 
-    private void enableUserInworkSpace() throws ApiException {
+    private void enableUserInworkspace() throws ApiException {
 
         LOGGER.log(Level.INFO, "enable user in workspace...");
         UserDTO userDTO = new UserDTO();
@@ -882,8 +883,6 @@ public class SampleLoader {
         roleGroupDTO.setName("support");
         roleGroupDTO.setDefaultAssignedGroups(tmpArrays);
         RoleDTO support = rolesApi.createRole(workspaceId,roleGroupDTO);
-
-        tmpArrays = null;
 
         // Workflow
         LOGGER.log(Level.INFO, "Creating workflow ...");
@@ -1577,27 +1576,36 @@ public class SampleLoader {
     }
 
     private void createOrganization() throws ApiException {
+
         LOGGER.log(Level.INFO, "Creating organization for "+login+"...");
         OrganizationsApi organizationsApi = new OrganizationsApi(client);
-        OrganizationDTO organizationDTO = new OrganizationDTO();
+        OrganizationDTO organizationDTO = organizationsApi.getOrganization();
+        if(organizationDTO != null){
+
+            if(!login.equals(organizationDTO.getOwner())) {
+
+                LOGGER.log(Level.INFO, "You are member of an existing organization. Cannot create yours.");
+                return;
+            }
+            organizationsApi.deleteOrganization();
+        }
 
         //create the organization
+        organizationDTO = new OrganizationDTO();
         organizationDTO.setName("Organization Test");
         organizationDTO.setDescription("Organization created from sample");
         organizationDTO.setOwner(login);
         organizationsApi.createOrganization(organizationDTO);
-
         //add members
         LOGGER.log(Level.INFO, "add members to organization...");
-        List<UserDTO> members = new ArrayList<>();
         UserDTO userDTO = new UserDTO();
         int limit = 0;
-        for(String user :  logins){
+        for (String user : logins) {
 
             userDTO.setName(user);
             userDTO.setLogin(user);
             organizationsApi.addMember(userDTO);
-            if(limit == 2)break;
+            if (limit == 2) break;
             limit++;
         }
     }
