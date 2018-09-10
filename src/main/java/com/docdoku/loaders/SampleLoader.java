@@ -340,9 +340,9 @@ public class SampleLoader {
         template.setMask("OFFICE-###");
         new DocumentTemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
 
-        template.setReference("CalcDocuments");
-        template.setDocumentType("OfficeCalcule");
-        template.setMask("CALC-###");
+        template.setReference("Spreadhsheet");
+        template.setDocumentType("SPREADHSHEET");
+        template.setMask("SPREADHSHEET-###");
         new DocumentTemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
     }
 
@@ -551,10 +551,10 @@ public class SampleLoader {
         documentCreationDTO.setAcl(aclDto);
         foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":OfficeDocuments");
 
-        documentCreationDTO.setReference("CALC-001");
+        documentCreationDTO.setReference("SPREADHSHEET-001");
         documentCreationDTO.setTitle("My first office calcule document");
         documentCreationDTO.setWorkspaceId(workspaceId);
-        documentCreationDTO.setTemplateId("CalcDocuments");
+        documentCreationDTO.setTemplateId("Spreadhsheet");
         documentCreationDTO.setDescription("An office calcule document created with sample loader");
         documentCreationDTO.setWorkflowModelId(workflowModelDTO.getId());
         documentCreationDTO.setRoleMapping(roleMappingDTOs);
@@ -619,7 +619,7 @@ public class SampleLoader {
         documentBinaryApi.uploadDocumentFiles(workspaceId, "USER-MAN-001", "A", 1, SampleLoaderUtils.getFile("user-man-001.txt"));
         documentBinaryApi.uploadDocumentFiles(workspaceId, "API-001", "A", 1, SampleLoaderUtils.getFile("API-001"));
         documentBinaryApi.uploadDocumentFiles(workspaceId, "OFFICE-001", "A", 1, SampleLoaderUtils.getFile("test_officeWriter.odt"));
-        documentBinaryApi.uploadDocumentFiles(workspaceId,"CALC-001","A",1,SampleLoaderUtils.getFile("feuilleCalcTest.ods"));
+        documentBinaryApi.uploadDocumentFiles(workspaceId,"SPREADHSHEET-001","A",1,SampleLoaderUtils.getFile("spreadhsheet.ods"));
 
         // Check in
         LOGGER.log(Level.INFO, "Checking in documents ...");
@@ -631,7 +631,7 @@ public class SampleLoader {
         documentApi.checkInDocument(workspaceId, "USER-MAN-001", "A");
         documentApi.checkInDocument(workspaceId, "API-001", "A");
         documentApi.checkInDocument(workspaceId, "OFFICE-001", "A");
-        documentApi.checkInDocument(workspaceId, "CALC-001", "A");
+        documentApi.checkInDocument(workspaceId, "SPREADHSHEET-001", "A");
     }
 
 
@@ -891,7 +891,7 @@ public class SampleLoader {
         TaskModelDTO firstTask = new TaskModelDTO();
         firstTask.setNum(0);
         firstTask.setTitle("Organise Milestones");
-        firstTask.setInstructions("check the requests client and organise works with engineers");
+        firstTask.setInstructions("Check customer's requests and plan a workshop with engineers");
         firstTask.setRole(ceo);
 
         TaskModelDTO secondTask = new TaskModelDTO();
@@ -903,19 +903,19 @@ public class SampleLoader {
         TaskModelDTO thirdTask = new TaskModelDTO();
         thirdTask .setNum(2);
         thirdTask .setTitle("Start first iteration");
-        thirdTask .setInstructions("Make a reunion with technicians and start to plane iterations");
+        thirdTask .setInstructions("Plan a workshop with technicians and define next iterations");
         thirdTask .setRole(technicianRole);
 
         TaskModelDTO fourthTask = new TaskModelDTO();
         fourthTask.setNum(3);
         fourthTask.setTitle("Design some prototypes");
-        fourthTask.setInstructions("Create a new prototypes design, then validate the task");
+        fourthTask.setInstructions("Create a new prototype design, then validate the task");
         fourthTask.setRole(designerRole);
 
         TaskModelDTO fifthTask = new TaskModelDTO();
         fifthTask.setNum(4);
-        fifthTask.setTitle("Open Ticket and versioning management");
-        fifthTask.setInstructions("check modifications and open tickets if necessary with right version");
+        fifthTask.setTitle("Project review");
+        fifthTask.setInstructions("Run quality assurance phase");
         fifthTask.setRole(support);
 
         List<TaskModelDTO> tasks = new ArrayList<>();
@@ -975,12 +975,12 @@ public class SampleLoader {
         partTemplateCreationDTO.setAttributeTemplates(attributes);
         partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
 
-        partTemplateCreationDTO.setReference("WINDOW");
+        partTemplateCreationDTO.setReference("WHEEL");
         partTemplateCreationDTO.setMask("WHEEL-###");
         partTemplateCreationDTO.setAttributeTemplates(attributes);
         partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
 
-        partTemplateCreationDTO.setReference("LOCK");
+        partTemplateCreationDTO.setReference("AMORTIZER");
         partTemplateCreationDTO.setMask("AMORTIZER-###");
         partTemplateCreationDTO.setAttributeTemplates(attributes);
         partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
@@ -1008,14 +1008,14 @@ public class SampleLoader {
         //Parts creations
         part.setTemplateId("SEATS");
         part.setNumber("SEAT-010");
-        part.setName("front seat");
+        part.setName("Front seat");
         part.setWorkflowModelId(workflowModelDTO.getId());
         part.setRoleMapping(roleMappingDTOs);
         part.setAcl(aclDto);
         PartRevisionDTO frontSeat = partsApi.createNewPart(workspaceId, part);
         addAttributes(partsApi, frontSeat);
         part.setNumber("SEAT-020");
-        part.setName("back seat");
+        part.setName("Back seat");
         PartRevisionDTO backSeat = partsApi.createNewPart(workspaceId, part);
         addAttributes(partsApi, backSeat);
 
@@ -1241,7 +1241,7 @@ public class SampleLoader {
         PartRevisionDTO leftDoor =  partsApi.createNewPart(workspaceId,partCreationDTO);
         addAttributes(partsApi,leftDoor);
 
-        partCreationDTO.setTemplateId("WINDOW");
+        partCreationDTO.setTemplateId("WHEEL");
         partCreationDTO.setName("Wheel part");
         partCreationDTO.setNumber(partsNumber[1]);
         partCreationDTO.setDescription("Left front wheel");
@@ -1249,7 +1249,7 @@ public class SampleLoader {
         PartRevisionDTO leftWindow =  partsApi.createNewPart(workspaceId,partCreationDTO);
         addAttributes(partsApi,leftWindow);
 
-        partCreationDTO.setTemplateId("LOCK");
+        partCreationDTO.setTemplateId("AMORTIZER");
         partCreationDTO.setName("Amortizer part");
         partCreationDTO.setNumber(partsNumber[2]);
         partCreationDTO.setDescription("Left front amortizer");
@@ -1369,7 +1369,7 @@ public class SampleLoader {
         ConfigurationItemDTO product = new ConfigurationItemDTO();
         product.setId(partsNumber[0]);
         product.setDesignItemNumber(partsNumber[0]);
-        product.setDescription("GENERATED FROM SAMPLE DATA FOR TEST");
+        product.setDescription("Generated from sample data for test");
         product.setWorkspaceId(workspaceId);
 
         productsApi.createConfigurationItem(workspaceId,product);
@@ -1397,7 +1397,7 @@ public class SampleLoader {
 
         //Create a typed links
         LightPathToPathLinkDTO link = new LightPathToPathLinkDTO();
-        link.setType("description ( added from sample )");
+        link.setType("Mechanical");
         link.setDescription("a typed link created from sample data");
         link.setSourcePath(structureComponents.get(0).getPath());
         link.setTargetPath(structureComponents.get(1).getPath());
@@ -1458,7 +1458,7 @@ public class SampleLoader {
         TaskModelDTO firstTask = new TaskModelDTO();
         firstTask.setNum(0);
         firstTask.setTitle("design door prototype");
-        firstTask.setInstructions("make design for door");
+        firstTask.setInstructions("Create door's design");
         firstTask.setRole(engineers);
 
         TaskModelDTO secondTask = new TaskModelDTO();
@@ -1487,8 +1487,8 @@ public class SampleLoader {
 
         TaskModelDTO fifthTask = new TaskModelDTO();
         fifthTask.setNum(1);
-        fifthTask.setTitle("bild window");
-        fifthTask.setInstructions("build window");
+        fifthTask.setTitle("Build window");
+        fifthTask.setInstructions("Build window");
         fifthTask.setRole(engineers);
 
         tasks2.add(fourthTask);
