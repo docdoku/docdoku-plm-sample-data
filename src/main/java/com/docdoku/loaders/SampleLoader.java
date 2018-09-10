@@ -334,6 +334,16 @@ public class SampleLoader {
         template.setDocumentType("APIManuals");
         template.setMask("API-###");
         new DocumentTemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
+
+        template.setReference("OfficeDocuments");
+        template.setDocumentType("OfficeWriter");
+        template.setMask("OFFICE-###");
+        new DocumentTemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
+
+        template.setReference("CalcDocuments");
+        template.setDocumentType("OfficeCalcule");
+        template.setMask("CALC-###");
+        new DocumentTemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
     }
 
     private void createFolders() throws ApiException {
@@ -347,6 +357,9 @@ public class SampleLoader {
         new FoldersApi(client).createSubFolder(workspaceId, workspaceId, folderDTO);
 
         folderDTO.setName("APIManuals");
+        new FoldersApi(client).createSubFolder(workspaceId, workspaceId, folderDTO);
+
+        folderDTO.setName("OfficeDocuments");
         new FoldersApi(client).createSubFolder(workspaceId, workspaceId, folderDTO);
     }
 
@@ -527,16 +540,43 @@ public class SampleLoader {
         documentCreationDTO.setAcl(aclDto);
         foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Letters");
 
+        documentCreationDTO.setReference("OFFICE-001");
+        documentCreationDTO.setTitle("My first office writer document");
+        documentCreationDTO.setWorkspaceId(workspaceId);
+        documentCreationDTO.setTemplateId("OfficeDocuments");
+        documentCreationDTO.setDescription("An office document created with sample loader");
+        documentCreationDTO.setWorkflowModelId(workflowModelDTO.getId());
+        documentCreationDTO.setRoleMapping(roleMappingDTOs);
+
+        documentCreationDTO.setAcl(aclDto);
+        foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":OfficeDocuments");
+
+        documentCreationDTO.setReference("CALC-001");
+        documentCreationDTO.setTitle("My first office calcule document");
+        documentCreationDTO.setWorkspaceId(workspaceId);
+        documentCreationDTO.setTemplateId("CalcDocuments");
+        documentCreationDTO.setDescription("An office calcule document created with sample loader");
+        documentCreationDTO.setWorkflowModelId(workflowModelDTO.getId());
+        documentCreationDTO.setRoleMapping(roleMappingDTOs);
+
+        documentCreationDTO.setAcl(aclDto);
+        foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":OfficeDocuments");
+
         documentCreationDTO.setReference("LETTER-002");
-        documentCreationDTO.setTitle("An other letter");
+        documentCreationDTO.setTitle("My second letter");
+        documentCreationDTO.setWorkspaceId(workspaceId);
+        documentCreationDTO.setTemplateId("Letter");
+        documentCreationDTO.setDescription("Some letter created with sample loader");
         foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Letters");
 
         aclDto.setGroupEntries(generateACLEntries_FullAccesForGroupContainAdminWks());
         documentCreationDTO.setAcl(aclDto);
+
         documentCreationDTO.setReference("INVOICE-001");
         documentCreationDTO.setTitle("My first invoice");
         documentCreationDTO.setWorkspaceId(workspaceId);
         documentCreationDTO.setTemplateId("Invoice");
+
         documentCreationDTO.setDescription("Some invoice created with sample loader");
         foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Invoices");
 
@@ -578,6 +618,8 @@ public class SampleLoader {
         documentBinaryApi.uploadDocumentFiles(workspaceId, "INVOICE-002", "A", 1, SampleLoaderUtils.getFile("invoice-002.xlsx"));
         documentBinaryApi.uploadDocumentFiles(workspaceId, "USER-MAN-001", "A", 1, SampleLoaderUtils.getFile("user-man-001.txt"));
         documentBinaryApi.uploadDocumentFiles(workspaceId, "API-001", "A", 1, SampleLoaderUtils.getFile("API-001"));
+        documentBinaryApi.uploadDocumentFiles(workspaceId, "OFFICE-001", "A", 1, SampleLoaderUtils.getFile("test_officeWriter.odt"));
+        documentBinaryApi.uploadDocumentFiles(workspaceId,"CALC-001","A",1,SampleLoaderUtils.getFile("feuilleCalcTest.ods"));
 
         // Check in
         LOGGER.log(Level.INFO, "Checking in documents ...");
@@ -588,6 +630,8 @@ public class SampleLoader {
         documentApi.checkInDocument(workspaceId, "INVOICE-002", "A");
         documentApi.checkInDocument(workspaceId, "USER-MAN-001", "A");
         documentApi.checkInDocument(workspaceId, "API-001", "A");
+        documentApi.checkInDocument(workspaceId, "OFFICE-001", "A");
+        documentApi.checkInDocument(workspaceId, "CALC-001", "A");
     }
 
 
@@ -1188,7 +1232,7 @@ public class SampleLoader {
 
         partCreationDTO.setTemplateId("DOOR");
         partCreationDTO.setNumber(partsNumber[0]);
-        partCreationDTO.setName("Left front door");
+        partCreationDTO.setName("Door part");
         partCreationDTO.setVersion("A");
         partCreationDTO.setWorkflowModelId(workflowModelDTO.getId());
         partCreationDTO.setRoleMapping(roleMappingDTOs);
@@ -1198,15 +1242,17 @@ public class SampleLoader {
         addAttributes(partsApi,leftDoor);
 
         partCreationDTO.setTemplateId("WINDOW");
+        partCreationDTO.setName("Wheel part");
         partCreationDTO.setNumber(partsNumber[1]);
-        partCreationDTO.setName("Left front window");
+        partCreationDTO.setDescription("Left front wheel");
 
         PartRevisionDTO leftWindow =  partsApi.createNewPart(workspaceId,partCreationDTO);
         addAttributes(partsApi,leftWindow);
 
         partCreationDTO.setTemplateId("LOCK");
+        partCreationDTO.setName("Amortizer part");
         partCreationDTO.setNumber(partsNumber[2]);
-        partCreationDTO.setName("Left front lock");
+        partCreationDTO.setDescription("Left front amortizer");
 
         PartRevisionDTO leftLock =  partsApi.createNewPart(workspaceId,partCreationDTO);
         addAttributes(partsApi,leftLock);
@@ -1220,29 +1266,55 @@ public class SampleLoader {
         PartIterationDTO doorIterationDto = LastIterationHelper.getLastIteration(doorRevisionDto);
 
         List<PartUsageLinkDTO> components =  new ArrayList<>();
-        PartUsageLinkDTO windowLink =  new PartUsageLinkDTO();
+        PartUsageLinkDTO windowLeftLink =  new PartUsageLinkDTO();
 
-        ComponentDTO windowComponent = new ComponentDTO();
-        windowComponent.setNumber(partsNumber[1]);
-        windowComponent.setAmount(1.0);
-        windowComponent.setVersion("A");
-        windowComponent.setPartUsageLinkReferenceDescription("DOOR -> WINDOWS");
-        windowLink.setComponent(windowComponent);
-        windowLink.setAmount(1.0);
-        windowLink.setOptional(true);
+        ComponentDTO windowLeftComponent = new ComponentDTO();
+        windowLeftComponent.setNumber(partsNumber[1]);
+        windowLeftComponent.setAmount(1.0);
+        windowLeftComponent.setVersion("A");
+        windowLeftComponent.setPartUsageLinkReferenceDescription("left front wheel");
+        windowLeftComponent.setDescription("left front wheel");
+        windowLeftLink.setComponent(windowLeftComponent);
+        windowLeftLink.setReferenceDescription("Left front wheel");
+        windowLeftLink.setAmount(1.0);
+        windowLeftLink.setOptional(true);
 
-        PartUsageLinkDTO lockLink =  new PartUsageLinkDTO();
-        ComponentDTO lockComponent = new ComponentDTO();
+        ComponentDTO windowRightComponent = new ComponentDTO();
+        PartUsageLinkDTO windowRightLink =  new PartUsageLinkDTO();
+        windowRightComponent.setNumber(partsNumber[1]);
+        windowRightComponent.setAmount(1.0);
+        windowRightComponent.setVersion("A");
+        windowRightComponent.setPartUsageLinkReferenceDescription("Right front wheel");
+        windowLeftComponent.setDescription("Right front wheel");
+        windowRightLink.setComponent(windowLeftComponent);
+        windowRightLink.setAmount(1.0);
+        windowRightLink.setReferenceDescription("Right front wheel");
+        windowRightLink.setOptional(true);
 
-        lockComponent.setNumber(partsNumber[2]);
-        lockComponent.setAmount(1.0);
-        lockComponent.setVersion("A");
-        lockComponent.setPartUsageLinkReferenceDescription("DOOR -> LOCK");
-        lockLink.setAmount(1.0);
-        lockLink.setComponent(lockComponent);
-        lockLink.setOptional(true);
+        PartUsageLinkDTO lockLeftLink =  new PartUsageLinkDTO();
+        ComponentDTO lockLeftComponent = new ComponentDTO();
 
-        doorIterationDto.setComponents(components);
+        lockLeftComponent.setNumber(partsNumber[2]);
+        lockLeftComponent.setAmount(1.0);
+        lockLeftComponent.setVersion("A");
+        lockLeftComponent.setPartUsageLinkReferenceDescription("Left front amortizer");
+        lockLeftLink.setAmount(1.0);
+        lockLeftLink.setComponent(lockLeftComponent);
+        lockLeftLink.setOptional(true);
+        lockLeftLink.setReferenceDescription("Left front amortizer");
+
+        PartUsageLinkDTO lockRightLink =  new PartUsageLinkDTO();
+        ComponentDTO lockRightComponent = new ComponentDTO();
+
+        lockRightComponent.setNumber(partsNumber[2]);
+        lockRightComponent.setAmount(1.0);
+        lockRightComponent.setVersion("A");
+        lockRightComponent.setPartUsageLinkReferenceDescription("Right front amortizer");
+        lockRightLink.setAmount(1.0);
+        lockRightLink.setComponent(lockRightComponent);
+        lockRightLink.setOptional(true);
+        lockRightLink.setReferenceDescription("Right front amortizer");
+
 
         CADInstanceDTO windowsCadInstance = new CADInstanceDTO();
         windowsCadInstance.setRx(0.0);
@@ -1262,15 +1334,20 @@ public class SampleLoader {
 
         List<CADInstanceDTO> windowsCadInstances = new ArrayList<>();
         windowsCadInstances.add(windowsCadInstance);
-        windowLink.setCadInstances(windowsCadInstances);
+        windowLeftLink.setCadInstances(windowsCadInstances);
+        windowRightLink.setCadInstances(windowsCadInstances);
 
         List<CADInstanceDTO> lockCadInstances = new ArrayList<>();
         lockCadInstances.add(lockCadInstance);
-        lockLink.setCadInstances(lockCadInstances);
+        lockLeftLink.setCadInstances(lockCadInstances);
+        lockRightLink.setCadInstances(lockCadInstances);
 
-        components.add(windowLink);
-        components.add(lockLink);
+        components.add(windowLeftLink);
+        components.add(windowRightLink);
+        components.add(lockLeftLink);
+        components.add(lockRightLink);
 
+        doorIterationDto.setComponents(components);
         partApi.updatePartIteration(workspaceId,partsNumber[0],"A",1,doorIterationDto);
 
         LOGGER.log(Level.INFO, "Uploading 3D files...");
