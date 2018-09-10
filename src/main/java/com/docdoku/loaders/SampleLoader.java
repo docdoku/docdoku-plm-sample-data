@@ -26,15 +26,13 @@ import com.docdoku.api.client.ApiException;
 import com.docdoku.api.models.*;
 import com.docdoku.api.models.utils.AttributesHelper;
 import com.docdoku.api.models.utils.LastIterationHelper;
+import com.docdoku.api.models.utils.WorkflowHelper;
 import com.docdoku.api.services.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,13 +54,19 @@ public class SampleLoader {
     private ApiClient client;
     private ApiClient guestClient;
 
+    private String[] logins = {"rob", "joe", "steve","mickey","bill","rendal","winie","titi","toto","tata"};
+    private final String group1 = "Group1";
+    private final String group2 = "Group2";
+    private final String group3 = "Group3";
+    private final String group4 = "Group4";
+    private final String group5 = "Group5";
+
     public SampleLoader(String login, String password, String workspaceId, String url) {
         this.login = login;
         this.password = password;
         this.workspaceId = workspaceId;
         this.url = url;
         guestClient = DocDokuPLMClientFactory.createClient(url);
-        client = DocDokuPLMClientFactory.createJWTClient(url, login, password);
     }
 
     public void load() throws ApiException, IOException, InterruptedException {
@@ -77,12 +81,23 @@ public class SampleLoader {
             LOGGER.log(Level.INFO, "Cannot create account, trying to use given credentials for next operations");
         }
 
+        client = DocDokuPLMClientFactory.createJWTClient(url, login, password);
+
         createWorkspace();
+        addUserToWorkspace(login);
         createOtherAccounts();
         createGroups();
+        setAccessPermissionForGroups();
+        enableUserInworkspace();
+        setAccessPermissionsForUser();
+
+        createOrganization();
 
         createMilestones();
+        setMilestoneAcl();
         createRolesAndWorkflow();
+        createRolesAndWorkflowForDoorProduct();
+        setWorkFlowACL();
 
         createDocumentTemplates();
         createFolders();
@@ -92,12 +107,22 @@ public class SampleLoader {
         createPartTemplates();
         createParts();
         createProducts();
+        createDoorProduct();
+        createConfiguration();
         createBaseline();
         createProductInstance();
 
+
         createRequests();
+        setRequestsAcl();
         createIssues();
+        setIssuesAcl();
         createOrders();
+        setOrdersAcl();
+        updateAffectedPartInOrder();
+        subscribeGroupToTag();
+
+        checkoutParts();
 
     }
 
@@ -113,7 +138,6 @@ public class SampleLoader {
 
     private void createOtherAccounts() throws ApiException {
         LOGGER.log(Level.INFO, "Creating accounts");
-        String[] logins = {"rob", "joe", "bill"};
         for (String pLogin : logins) {
             try {
                 createAccount(pLogin);
@@ -127,11 +151,131 @@ public class SampleLoader {
     private void createGroups() throws ApiException {
         LOGGER.log(Level.INFO, "Creating groups ...");
         UserGroupDTO group = new UserGroupDTO();
+
         group.setWorkspaceId(workspaceId);
-        group.setId("Group1");
-        new WorkspacesApi(client).createGroup(workspaceId, group);
-        group.setId("Group2");
-        new WorkspacesApi(client).createGroup(workspaceId, group);
+
+        group.setId(group1);
+        WorkspacesApi workspacesApi = new WorkspacesApi(client);
+        workspacesApi.createGroup(workspaceId, group);
+
+        group.setId(group2);
+        workspacesApi.createGroup(workspaceId, group);
+
+        group.setId(group3);
+        workspacesApi.createGroup(workspaceId, group);
+
+        group.setId(group4);
+        workspacesApi.createGroup(workspaceId, group);
+
+        group.setId(group5);
+        workspacesApi.createGroup(workspaceId, group);
+
+        int numGroup = 1;
+        String groupName = "Group"+numGroup;
+
+        for(int i = 0; i < logins.length;i++){
+
+            UserDTO userDTO = new UserDTO();
+            userDTO.setLogin(logins[i]);
+            if(i%2 != 0){//restricted to only two user by group ( one read-only and one full access )
+
+                userDTO.setMembership(UserDTO.MembershipEnum.READ_ONLY);
+                workspacesApi.addUser(workspaceId,userDTO,groupName);
+                numGroup+=1;
+                groupName = "Group"+numGroup;
+            }else{
+
+                userDTO.setMembership(UserDTO.MembershipEnum.FULL_ACCESS);
+                workspacesApi.addUser(workspaceId,userDTO,groupName);
+            }
+        }
+        UserDTO userDTO = new UserDTO();
+        userDTO.setLogin(login);
+        userDTO.setMembership(UserDTO.MembershipEnum.FULL_ACCESS);
+        workspacesApi.addUser(workspaceId,userDTO,group1);
+    }
+
+
+    private void subscribeGroupToTag() throws  ApiException{
+        LOGGER.log(Level.INFO, "subscribe group1 and group2 to tag : API....");
+        WorkspacesApi workspacesApi = new WorkspacesApi(client);
+        List<UserGroupDTO> groupDTOs = workspacesApi.getGroups(workspaceId);
+        List<TagDTO> tags = workspacesApi.getTagsInWorkspace(workspaceId);
+
+        TagSubscriptionDTO tagSubscriptionDTO = new TagSubscriptionDTO();
+        tagSubscriptionDTO.setOnIterationChange(true);
+        tagSubscriptionDTO.setOnStateChange(true);
+
+        for(UserGroupDTO ugdto : groupDTOs){
+
+            if(group1.equals(ugdto.getId()) || group2.equals(ugdto.getId())) {
+
+                tagSubscriptionDTO.setTag(tags.get(0).getLabel());
+                workspacesApi.updateUserGroupSubscription(workspaceId, ugdto.getId(), tagSubscriptionDTO.getTag(), tagSubscriptionDTO);
+            }else if(group3.equals(ugdto.getId())){
+
+                tagSubscriptionDTO.setTag(tags.get(1).getLabel());
+                workspacesApi.updateUserGroupSubscription(workspaceId,ugdto.getId(),tagSubscriptionDTO.getTag(),tagSubscriptionDTO);
+            }
+        }
+    }
+
+    private void enableUserInworkspace() throws ApiException {
+
+        LOGGER.log(Level.INFO, "enable user in workspace...");
+        UserDTO userDTO = new UserDTO();
+        WorkspacesApi wksApi = new WorkspacesApi(client);
+        for(int i=0;i < logins.length;i++){
+            userDTO.setLogin(logins[i]);
+            wksApi.enableUser(workspaceId, userDTO);
+        }
+        userDTO.setLogin(login);
+        wksApi.enableUser(workspaceId, userDTO);
+    }
+
+    private void setAccessPermissionsForUser() throws ApiException {
+
+        LOGGER.log(Level.INFO, "Setting the access permissions of User ...");
+        WorkspacesApi wksApi = new WorkspacesApi(client);
+        for(int i=0;i < logins.length;i++){
+
+            if(i%2 != 0){
+
+                UserDTO userDTO = new UserDTO();
+                userDTO.setLogin(logins[i]);
+                userDTO.setMembership(UserDTO.MembershipEnum.READ_ONLY);
+                wksApi.setUserAccess(workspaceId,userDTO);
+            }
+        }
+
+    }
+
+    private void setAccessPermissionForGroups() throws ApiException {
+
+        LOGGER.log(Level.INFO, "Setting the access permissions of groups ...");
+        WorkspaceUserGroupMemberShipDTO wksGrpMemberShipDTO = new WorkspaceUserGroupMemberShipDTO();
+        WorkspacesApi wksApi = new WorkspacesApi(client);
+
+        wksGrpMemberShipDTO.setWorkspaceId(workspaceId);
+        wksGrpMemberShipDTO.setMemberId(group1);
+        wksGrpMemberShipDTO.setReadOnly(false);
+        wksApi.setGroupAccess(workspaceId, wksGrpMemberShipDTO);
+
+        wksGrpMemberShipDTO.setMemberId(group2);
+        wksGrpMemberShipDTO.setReadOnly(false);
+        wksApi.setGroupAccess(workspaceId, wksGrpMemberShipDTO);
+
+        wksGrpMemberShipDTO.setMemberId(group3);
+        wksGrpMemberShipDTO.setReadOnly(true);
+        wksApi.setGroupAccess(workspaceId, wksGrpMemberShipDTO);
+
+        wksGrpMemberShipDTO.setMemberId(group4);
+        wksGrpMemberShipDTO.setReadOnly(true);
+        wksApi.setGroupAccess(workspaceId, wksGrpMemberShipDTO);
+
+        wksGrpMemberShipDTO.setMemberId(group5);
+        wksGrpMemberShipDTO.setReadOnly(true);
+        wksApi.setGroupAccess(workspaceId, wksGrpMemberShipDTO);
     }
 
     private void createAccount(String accountLogin) throws ApiException {
@@ -187,6 +331,21 @@ public class SampleLoader {
         template.setDocumentType("Documentation");
         template.setMask("USER-MAN-###");
         new DocumentTemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
+
+        template.setReference("APIDocuments");
+        template.setDocumentType("APIManuals");
+        template.setMask("API-###");
+        new DocumentTemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
+
+        template.setReference("OfficeDocuments");
+        template.setDocumentType("OfficeWriter");
+        template.setMask("OFFICE-###");
+        new DocumentTemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
+
+        template.setReference("Spreadhsheet");
+        template.setDocumentType("SPREADHSHEET");
+        template.setMask("SPREADHSHEET-###");
+        new DocumentTemplatesApi(client).createDocumentMasterTemplate(workspaceId, template);
     }
 
     private void createFolders() throws ApiException {
@@ -198,6 +357,12 @@ public class SampleLoader {
         new FoldersApi(client).createSubFolder(workspaceId, workspaceId, folderDTO);
         folderDTO.setName("Documentation");
         new FoldersApi(client).createSubFolder(workspaceId, workspaceId, folderDTO);
+
+        folderDTO.setName("APIManuals");
+        new FoldersApi(client).createSubFolder(workspaceId, workspaceId, folderDTO);
+
+        folderDTO.setName("OfficeDocuments");
+        new FoldersApi(client).createSubFolder(workspaceId, workspaceId, folderDTO);
     }
 
     private void createTags() throws ApiException {
@@ -206,7 +371,7 @@ public class SampleLoader {
         List<TagDTO> tags = new ArrayList<>();
         tagListDTO.setTags(tags);
 
-        String[] tagNames = {"internal", "important", "2016", "archive"};
+        String[] tagNames = {"internal", "important", "2018", "archive","API"};
 
         for (String tagName : tagNames) {
             TagDTO tagDTO = new TagDTO();
@@ -219,10 +384,151 @@ public class SampleLoader {
         new TagsApi(client).createTags(workspaceId, tagListDTO);
     }
 
+
+    private List<ACLEntryDTO> generateACLEntries_FullAccesForGroupContainAdminWks(){
+
+
+        List<ACLEntryDTO> acls = new ArrayList<>();
+
+        ACLEntryDTO aclEntryDTOGrp1 = new ACLEntryDTO();
+        aclEntryDTOGrp1.setKey(group1);
+        aclEntryDTOGrp1.setValue( ACLEntryDTO.ValueEnum.FULL_ACCESS);
+        acls.add(aclEntryDTOGrp1);
+
+        ACLEntryDTO aclEntryDTOGrp2 = new ACLEntryDTO();
+        aclEntryDTOGrp2.setKey(group2);
+        aclEntryDTOGrp2.setValue( ACLEntryDTO.ValueEnum.READ_ONLY);
+        acls.add(aclEntryDTOGrp2);
+
+        ACLEntryDTO aclEntryDTOGrp3 = new ACLEntryDTO();
+        aclEntryDTOGrp3.setKey(group3);
+        aclEntryDTOGrp3.setValue( ACLEntryDTO.ValueEnum.READ_ONLY);
+        acls.add(aclEntryDTOGrp3);
+
+        ACLEntryDTO aclEntryDTOGrp4 = new ACLEntryDTO();
+        aclEntryDTOGrp4.setKey(group4);
+        aclEntryDTOGrp4.setValue( ACLEntryDTO.ValueEnum.READ_ONLY);
+        acls.add(aclEntryDTOGrp4);
+
+        ACLEntryDTO aclEntryDTOGrp5 = new ACLEntryDTO();
+        aclEntryDTOGrp5.setKey(group5);
+        aclEntryDTOGrp5.setValue( ACLEntryDTO.ValueEnum.FORBIDDEN);
+        acls.add(aclEntryDTOGrp5);
+
+        return acls;
+    }
+
+
+    private List<ACLEntryDTO> generateACLEntries_giveReadAccesGrp5(){
+
+        List<ACLEntryDTO> acls = new ArrayList<>();
+
+        ACLEntryDTO aclEntryDTOGrp1 = new ACLEntryDTO();
+        aclEntryDTOGrp1.setKey(group1);
+        aclEntryDTOGrp1.setValue( ACLEntryDTO.ValueEnum.FULL_ACCESS);
+        acls.add(aclEntryDTOGrp1);
+
+        ACLEntryDTO aclEntryDTOGrp2 = new ACLEntryDTO();
+        aclEntryDTOGrp2.setKey(group2);
+        aclEntryDTOGrp2.setValue( ACLEntryDTO.ValueEnum.READ_ONLY);
+        acls.add(aclEntryDTOGrp2);
+
+        ACLEntryDTO aclEntryDTOGrp3 = new ACLEntryDTO();
+        aclEntryDTOGrp3.setKey(group3);
+        aclEntryDTOGrp3.setValue( ACLEntryDTO.ValueEnum.READ_ONLY);
+        acls.add(aclEntryDTOGrp3);
+
+        ACLEntryDTO aclEntryDTOGrp4 = new ACLEntryDTO();
+        aclEntryDTOGrp4.setKey(group4);
+        aclEntryDTOGrp4.setValue( ACLEntryDTO.ValueEnum.READ_ONLY);
+        acls.add(aclEntryDTOGrp4);
+
+        ACLEntryDTO aclEntryDTOGrp5 = new ACLEntryDTO();
+        aclEntryDTOGrp5.setKey(group5);
+        aclEntryDTOGrp5.setValue( ACLEntryDTO.ValueEnum.READ_ONLY);
+        acls.add(aclEntryDTOGrp5);
+
+        return acls;
+    }
+
+    private List<ACLEntryDTO> generateACLEntries_giveFullAccesGrp1AndGrp2(){
+
+        List<ACLEntryDTO> acls = new ArrayList<>();
+
+        ACLEntryDTO aclEntryDTOGrp1 = new ACLEntryDTO();
+        aclEntryDTOGrp1.setKey(group1);
+        aclEntryDTOGrp1.setValue( ACLEntryDTO.ValueEnum.FULL_ACCESS);
+        acls.add(aclEntryDTOGrp1);
+
+        ACLEntryDTO aclEntryDTOGrp2 = new ACLEntryDTO();
+        aclEntryDTOGrp2.setKey(group2);
+        aclEntryDTOGrp2.setValue( ACLEntryDTO.ValueEnum.FULL_ACCESS);
+        acls.add(aclEntryDTOGrp2);
+
+        ACLEntryDTO aclEntryDTOGrp3 = new ACLEntryDTO();
+        aclEntryDTOGrp3.setKey(group3);
+        aclEntryDTOGrp3.setValue( ACLEntryDTO.ValueEnum.FORBIDDEN);
+        acls.add(aclEntryDTOGrp3);
+
+        ACLEntryDTO aclEntryDTOGrp4 = new ACLEntryDTO();
+        aclEntryDTOGrp4.setKey(group4);
+        aclEntryDTOGrp4.setValue( ACLEntryDTO.ValueEnum.FORBIDDEN);
+        acls.add(aclEntryDTOGrp4);
+
+        ACLEntryDTO aclEntryDTOGrp5 = new ACLEntryDTO();
+        aclEntryDTOGrp5.setKey(group5);
+        aclEntryDTOGrp5.setValue( ACLEntryDTO.ValueEnum.FORBIDDEN);
+        acls.add(aclEntryDTOGrp5);
+
+        return acls;
+    }
+
+    private List<ACLEntryDTO> generateACLEntries_giveFullAccesGrp1AndGrp3(){
+
+        List<ACLEntryDTO> acls = new ArrayList<>();
+
+        ACLEntryDTO aclEntryDTOGrp1 = new ACLEntryDTO();
+        aclEntryDTOGrp1.setKey(group1);
+        aclEntryDTOGrp1.setValue( ACLEntryDTO.ValueEnum.FULL_ACCESS);
+        acls.add(aclEntryDTOGrp1);
+
+        ACLEntryDTO aclEntryDTOGrp2 = new ACLEntryDTO();
+        aclEntryDTOGrp2.setKey(group2);
+        aclEntryDTOGrp2.setValue( ACLEntryDTO.ValueEnum.FORBIDDEN);
+        acls.add(aclEntryDTOGrp2);
+
+        ACLEntryDTO aclEntryDTOGrp3 = new ACLEntryDTO();
+        aclEntryDTOGrp3.setKey(group3);
+        aclEntryDTOGrp3.setValue( ACLEntryDTO.ValueEnum.FULL_ACCESS);
+        acls.add(aclEntryDTOGrp3);
+
+        ACLEntryDTO aclEntryDTOGrp4 = new ACLEntryDTO();
+        aclEntryDTOGrp4.setKey(group4);
+        aclEntryDTOGrp4.setValue( ACLEntryDTO.ValueEnum.FORBIDDEN);
+        acls.add(aclEntryDTOGrp4);
+
+        ACLEntryDTO aclEntryDTOGrp5 = new ACLEntryDTO();
+        aclEntryDTOGrp5.setKey(group5);
+        aclEntryDTOGrp5.setValue( ACLEntryDTO.ValueEnum.FORBIDDEN);
+        acls.add(aclEntryDTOGrp5);
+
+        return acls;
+    }
+
     private void createDocuments() throws ApiException, IOException {
         LOGGER.log(Level.INFO, "Creating documents ...");
 
         FoldersApi foldersApi = new FoldersApi(client);
+        ACLDTO aclDto = new ACLDTO();
+        aclDto.setGroupEntries(generateACLEntries_giveFullAccesGrp1AndGrp3());
+
+        //Workflow model
+
+        WorkflowModelDTO workflowModelDTO = new WorkspacesApi(client)
+                .getWorkflowModelInWorkspace(workspaceId, "My first workflow");
+
+        List<RoleMappingDTO> roleMappingDTOs = resolveDefaultRoles(workflowModelDTO);
+
         // Creation
         DocumentCreationDTO documentCreationDTO = new DocumentCreationDTO();
         documentCreationDTO.setReference("LETTER-001");
@@ -230,16 +536,49 @@ public class SampleLoader {
         documentCreationDTO.setWorkspaceId(workspaceId);
         documentCreationDTO.setTemplateId("Letter");
         documentCreationDTO.setDescription("Some letter created with sample loader");
+        documentCreationDTO.setWorkflowModelId(workflowModelDTO.getId());
+        documentCreationDTO.setRoleMapping(roleMappingDTOs);
+
+        documentCreationDTO.setAcl(aclDto);
         foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Letters");
 
+        documentCreationDTO.setReference("OFFICE-001");
+        documentCreationDTO.setTitle("My first office writer document");
+        documentCreationDTO.setWorkspaceId(workspaceId);
+        documentCreationDTO.setTemplateId("OfficeDocuments");
+        documentCreationDTO.setDescription("An office document created with sample loader");
+        documentCreationDTO.setWorkflowModelId(workflowModelDTO.getId());
+        documentCreationDTO.setRoleMapping(roleMappingDTOs);
+
+        documentCreationDTO.setAcl(aclDto);
+        foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":OfficeDocuments");
+
+        documentCreationDTO.setReference("SPREADHSHEET-001");
+        documentCreationDTO.setTitle("My first office calcule document");
+        documentCreationDTO.setWorkspaceId(workspaceId);
+        documentCreationDTO.setTemplateId("Spreadhsheet");
+        documentCreationDTO.setDescription("An office calcule document created with sample loader");
+        documentCreationDTO.setWorkflowModelId(workflowModelDTO.getId());
+        documentCreationDTO.setRoleMapping(roleMappingDTOs);
+
+        documentCreationDTO.setAcl(aclDto);
+        foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":OfficeDocuments");
+
         documentCreationDTO.setReference("LETTER-002");
-        documentCreationDTO.setTitle("An other letter");
+        documentCreationDTO.setTitle("My second letter");
+        documentCreationDTO.setWorkspaceId(workspaceId);
+        documentCreationDTO.setTemplateId("Letter");
+        documentCreationDTO.setDescription("Some letter created with sample loader");
         foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Letters");
+
+        aclDto.setGroupEntries(generateACLEntries_FullAccesForGroupContainAdminWks());
+        documentCreationDTO.setAcl(aclDto);
 
         documentCreationDTO.setReference("INVOICE-001");
         documentCreationDTO.setTitle("My first invoice");
         documentCreationDTO.setWorkspaceId(workspaceId);
         documentCreationDTO.setTemplateId("Invoice");
+
         documentCreationDTO.setDescription("Some invoice created with sample loader");
         foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Invoices");
 
@@ -254,6 +593,15 @@ public class SampleLoader {
         documentCreationDTO.setDescription("Some end-user documentation");
         foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":Documentation");
 
+        aclDto.setGroupEntries(generateACLEntries_giveReadAccesGrp5());
+        documentCreationDTO.setReference("API-001");
+        documentCreationDTO.setTitle("API V1.0");
+        documentCreationDTO.setWorkspaceId(workspaceId);
+        documentCreationDTO.setTemplateId("APIDocuments");
+        documentCreationDTO.setAcl(aclDto);
+        documentCreationDTO.setDescription("First version of API description ");
+
+        foldersApi.createDocumentMasterInFolder(workspaceId, documentCreationDTO, workspaceId + ":APIManuals");
 
         LOGGER.log(Level.INFO, "Uploading document files...");
         // Upload
@@ -271,6 +619,9 @@ public class SampleLoader {
         documentBinaryApi.uploadDocumentFiles(workspaceId, "INVOICE-001", "A", 1, SampleLoaderUtils.getFile("invoice-001.xlsx"));
         documentBinaryApi.uploadDocumentFiles(workspaceId, "INVOICE-002", "A", 1, SampleLoaderUtils.getFile("invoice-002.xlsx"));
         documentBinaryApi.uploadDocumentFiles(workspaceId, "USER-MAN-001", "A", 1, SampleLoaderUtils.getFile("user-man-001.txt"));
+        documentBinaryApi.uploadDocumentFiles(workspaceId, "API-001", "A", 1, SampleLoaderUtils.getFile("API-001"));
+        documentBinaryApi.uploadDocumentFiles(workspaceId, "OFFICE-001", "A", 1, SampleLoaderUtils.getFile("test_officeWriter.odt"));
+        documentBinaryApi.uploadDocumentFiles(workspaceId,"SPREADHSHEET-001","A",1,SampleLoaderUtils.getFile("spreadhsheet.ods"));
 
         // Check in
         LOGGER.log(Level.INFO, "Checking in documents ...");
@@ -280,6 +631,9 @@ public class SampleLoader {
         documentApi.checkInDocument(workspaceId, "INVOICE-001", "A");
         documentApi.checkInDocument(workspaceId, "INVOICE-002", "A");
         documentApi.checkInDocument(workspaceId, "USER-MAN-001", "A");
+        documentApi.checkInDocument(workspaceId, "API-001", "A");
+        documentApi.checkInDocument(workspaceId, "OFFICE-001", "A");
+        documentApi.checkInDocument(workspaceId, "SPREADHSHEET-001", "A");
     }
 
 
@@ -289,21 +643,38 @@ public class SampleLoader {
         c.setTime(new Date());
         c.add(Calendar.DATE, 15);
 
+        MilestonesApi milestonesApi =new MilestonesApi(client);
+
         MilestoneDTO milestoneDTO = new MilestoneDTO();
         milestoneDTO.setWorkspaceId(workspaceId);
         milestoneDTO.setTitle("1.0");
         milestoneDTO.setDescription("First release");
         milestoneDTO.setDueDate(c.getTime());
 
-        new MilestonesApi(client).createMilestone(workspaceId, milestoneDTO);
+        milestonesApi.createMilestone(workspaceId, milestoneDTO);
 
         c.add(Calendar.DATE, 90);
         milestoneDTO.setTitle("2.0");
         milestoneDTO.setDescription("Second release");
         milestoneDTO.setDueDate(c.getTime());
-        new MilestonesApi(client).createMilestone(workspaceId, milestoneDTO);
+        milestonesApi.createMilestone(workspaceId, milestoneDTO);
 
 
+    }
+
+    private void setMilestoneAcl() throws ApiException {
+
+        LOGGER.log(Level.INFO, "create access for milestones");
+        MilestonesApi milestonesApi = new MilestonesApi(client);
+        List<MilestoneDTO>milestoneDTOs = milestonesApi.getMilestones(workspaceId);
+        ACLDTO aclDto = new ACLDTO();
+        aclDto.setGroupEntries(generateACLEntries_FullAccesForGroupContainAdminWks());
+
+        for(MilestoneDTO milestoneDTO : milestoneDTOs){
+
+            milestonesApi.updateMilestoneACL(workspaceId,milestoneDTO.getId(),aclDto);
+            LOGGER.log(Level.INFO, "updated milestone :"+milestoneDTO.getId());
+        }
     }
 
     private void createRequests() throws ApiException {
@@ -315,10 +686,12 @@ public class SampleLoader {
         changeRequestDTO.setName("REQ-001");
         changeRequestDTO.setDescription("Something needs to be corrected");
         changeRequestDTO.setCategory(ChangeRequestDTO.CategoryEnum.CORRECTIVE);
+        changeRequestDTO.setAssignee("joe");
         changeItemsApi.createRequest(workspaceId, changeRequestDTO);
 
         changeRequestDTO.setName("REQ-002");
         changeRequestDTO.setDescription("Something needs to be perfected");
+        changeRequestDTO.setAssignee("bill");
         changeRequestDTO.setCategory(ChangeRequestDTO.CategoryEnum.PERFECTIVE);
         changeItemsApi.createRequest(workspaceId, changeRequestDTO);
     }
@@ -332,12 +705,94 @@ public class SampleLoader {
         changeIssueDTO.setName("ISSUE-001");
         changeIssueDTO.setDescription("Something is wrong");
         changeIssueDTO.setPriority(ChangeIssueDTO.PriorityEnum.HIGH);
+        changeIssueDTO.setAssignee("bill");
         changeItemsApi.createIssue(workspaceId, changeIssueDTO);
+
 
         changeIssueDTO.setName("ISSUE-002");
         changeIssueDTO.setDescription("Something is terribly wrong");
         changeIssueDTO.setPriority(ChangeIssueDTO.PriorityEnum.EMERGENCY);
+        changeIssueDTO.setAssignee("joe");
         changeItemsApi.createIssue(workspaceId, changeIssueDTO);
+    }
+
+    private void setIssuesAcl() throws ApiException {
+
+        LOGGER.log(Level.INFO, "create access for issues");
+        ChangeItemsApi changeItemApi = new ChangeItemsApi(client);
+        List<ChangeIssueDTO> changeIssueDTOs = changeItemApi.getIssues(workspaceId);
+        ACLDTO aclDto = new ACLDTO();
+        aclDto.setGroupEntries(generateACLEntries_FullAccesForGroupContainAdminWks());
+        for(ChangeIssueDTO chageIssueDTO: changeIssueDTOs) {
+
+            changeItemApi.updateChangeIssueACL(workspaceId, chageIssueDTO.getId(), aclDto);
+        }
+    }
+
+    private void setRequestsAcl() throws ApiException {
+
+        LOGGER.log(Level.INFO, "create access for request");
+        ChangeItemsApi changeItemApi = new ChangeItemsApi(client);
+        List<ChangeRequestDTO> changeRequestDTOs = changeItemApi.getRequests(workspaceId);
+        ACLDTO aclDto = new ACLDTO();
+        aclDto.setGroupEntries(generateACLEntries_FullAccesForGroupContainAdminWks());
+        for(ChangeRequestDTO chageRequestDTO: changeRequestDTOs) {
+
+            changeItemApi.updateChangeRequestACL(workspaceId, chageRequestDTO.getId(), aclDto);
+        }
+    }
+
+    private void setOrdersAcl() throws ApiException {
+
+        LOGGER.log(Level.INFO, "create access for orders");
+        ChangeItemsApi changeItemApi = new ChangeItemsApi(client);
+        List<ChangeOrderDTO> changeOrderDTOs = changeItemApi.getOrders(workspaceId);
+        ACLDTO aclDto = new ACLDTO();
+        aclDto.setGroupEntries(generateACLEntries_FullAccesForGroupContainAdminWks());
+        for(ChangeOrderDTO chageOrderDTO: changeOrderDTOs) {
+
+            changeItemApi.updateChangeOrderACL(workspaceId, chageOrderDTO.getId(), aclDto);
+        }
+    }
+
+
+    private void updateAffectedPartInOrder() throws ApiException{
+        LOGGER.log(Level.INFO, "Affect some parts to orders");
+        ChangeItemsApi changeItemApi = new ChangeItemsApi(client);
+        List<ChangeOrderDTO> changeOrderDTOs = changeItemApi.getOrders(workspaceId);
+
+        WorkspacesApi workspacesApi = new WorkspacesApi(client);
+
+        PartRevisionDTO wheelRevision = workspacesApi.getLatestPartRevision(workspaceId,  "WHEEL-001");
+        PartIterationDTO wheelIteration = LastIterationHelper.getLastIteration(wheelRevision);
+
+
+        //affect parts
+        PartRevisionDTO amortizerRevision = new WorkspacesApi(client).getLatestPartRevision(workspaceId,  "AMORTIZER-001");
+        PartIterationDTO amortizerIteration = LastIterationHelper.getLastIteration(amortizerRevision);
+
+        List<PartIterationDTO> iterationDTOs =  new ArrayList<>();
+        iterationDTOs.add(amortizerIteration);
+        iterationDTOs.add(wheelIteration);
+
+        PartIterationListDTO partIterationListDTO =  new PartIterationListDTO();
+        partIterationListDTO.setParts(iterationDTOs);
+
+        for(ChangeOrderDTO chageOrderDTO: changeOrderDTOs) {
+
+            changeItemApi.saveChangeOrderAffectedParts(workspaceId,chageOrderDTO.getId(),partIterationListDTO);
+        }
+
+        LOGGER.log(Level.INFO, "Affect some requests to orders");
+        //affect request
+        List<ChangeRequestDTO> changeRequestDTOs = workspacesApi.getRequests(workspaceId);
+        ChangeRequestListDTO changeRequestListDTO = new ChangeRequestListDTO();
+
+        changeRequestListDTO.setRequests(changeRequestDTOs);
+        for(ChangeOrderDTO chageOrderDTO: changeOrderDTOs) {
+
+            changeItemApi.saveAffectedRequests(workspaceId,chageOrderDTO.getId(),changeRequestListDTO);
+        }
     }
 
     private void createOrders() throws ApiException {
@@ -348,13 +803,31 @@ public class SampleLoader {
 
         changeOrderDTO.setName("ORDER-001");
         changeOrderDTO.setDescription("Order for some documents");
-        changeOrderDTO.setCategory(ChangeOrderDTO.CategoryEnum.OTHER);
+        changeOrderDTO.setCategory(ChangeOrderDTO.CategoryEnum.PERFECTIVE);
+        changeOrderDTO.setAssignee("mickey");
+        changeOrderDTO.setPriority(ChangeOrderDTO.PriorityEnum.EMERGENCY);
         changeItemsApi.createOrder(workspaceId, changeOrderDTO);
 
         changeOrderDTO.setName("ORDER-002");
         changeOrderDTO.setDescription("Order for some parts");
+        changeOrderDTO.setAssignee("rob");
+        changeOrderDTO.setPriority(ChangeOrderDTO.PriorityEnum.MEDIUM);
         changeOrderDTO.setCategory(ChangeOrderDTO.CategoryEnum.OTHER);
         changeItemsApi.createOrder(workspaceId, changeOrderDTO);
+    }
+
+    private void setWorkFlowACL() throws ApiException{
+
+        LOGGER.log(Level.INFO,"Setting acl for created workflows...");
+        WorkflowModelsApi workflowModelsApi = new WorkflowModelsApi(client);
+        List<WorkflowModelDTO> workflowModelDTOs = workflowModelsApi.getWorkflowModelsInWorkspace(workspaceId);
+        ACLDTO aclDto = new ACLDTO();
+        aclDto.setGroupEntries(generateACLEntries_FullAccesForGroupContainAdminWks());
+        for(WorkflowModelDTO workflowModelDTO : workflowModelDTOs){
+
+            workflowModelsApi.updateWorkflowModelACL(workspaceId,workflowModelDTO.getId(),aclDto);
+            LOGGER.log(Level.INFO,"workflow with id "+workflowModelDTO.getId()+" was updated...");
+        }
     }
 
     private void createRolesAndWorkflow() throws ApiException {
@@ -363,6 +836,7 @@ public class SampleLoader {
         // Roles
         List<UserDTO> designers = new ArrayList<>();
         List<UserDTO> technicians = new ArrayList<>();
+        List<UserGroupDTO> groupsAvailable=  new WorkspacesApi(client).getGroups(workspaceId);
 
         UserDTO rob = new UserDTO();
         rob.setWorkspaceId(workspaceId);
@@ -385,31 +859,77 @@ public class SampleLoader {
         roleDTO.setDefaultAssignedUsers(technicians);
         RoleDTO technicianRole = rolesApi.createRole(workspaceId, roleDTO);
 
+        RoleDTO roleGroupDTO = new RoleDTO();
+        roleGroupDTO.setWorkspaceId(workspaceId);
+        List<UserGroupDTO> tmpArrays =  new ArrayList<>();
+
+        roleGroupDTO.setDefaultAssignedUsers(null);
+        tmpArrays.add(groupsAvailable.get(0));
+
+        roleGroupDTO.setName("ceo");
+        roleGroupDTO.setDefaultAssignedGroups(tmpArrays);
+        RoleDTO ceo = rolesApi.createRole(workspaceId,roleGroupDTO);
+
+        tmpArrays =  new ArrayList<>();
+        tmpArrays.add(groupsAvailable.get(1));
+        tmpArrays.add(groupsAvailable.get(2));
+
+        roleGroupDTO.setName("ingineers");
+        roleGroupDTO.setDefaultAssignedGroups(tmpArrays);
+        RoleDTO engineers = rolesApi.createRole(workspaceId,roleGroupDTO);
+
+        tmpArrays =  new ArrayList<>();
+        tmpArrays.add(groupsAvailable.get(3));
+
+        roleGroupDTO.setName("support");
+        roleGroupDTO.setDefaultAssignedGroups(tmpArrays);
+        RoleDTO support = rolesApi.createRole(workspaceId,roleGroupDTO);
 
         // Workflow
         LOGGER.log(Level.INFO, "Creating workflow ...");
 
         TaskModelDTO firstTask = new TaskModelDTO();
         firstTask.setNum(0);
-        firstTask.setTitle("Design something");
-        firstTask.setInstructions("Create a new design, then validate the task");
-        firstTask.setRole(designerRole);
+        firstTask.setTitle("Organise Milestones");
+        firstTask.setInstructions("Check customer's requests and plan a workshop with engineers");
+        firstTask.setRole(ceo);
 
         TaskModelDTO secondTask = new TaskModelDTO();
-        firstTask.setNum(1);
-        secondTask.setTitle("Build something");
-        firstTask.setInstructions("Build the prototype and validate the task");
-        secondTask.setRole(technicianRole);
+        secondTask.setNum(1);
+        secondTask.setTitle("Build architecture diagrams");
+        secondTask.setInstructions("Build the prototype and validate the task");
+        secondTask.setRole(engineers);
+
+        TaskModelDTO thirdTask = new TaskModelDTO();
+        thirdTask .setNum(2);
+        thirdTask .setTitle("Start first iteration");
+        thirdTask .setInstructions("Plan a workshop with technicians and define next iterations");
+        thirdTask .setRole(technicianRole);
+
+        TaskModelDTO fourthTask = new TaskModelDTO();
+        fourthTask.setNum(3);
+        fourthTask.setTitle("Design some prototypes");
+        fourthTask.setInstructions("Create a new prototype design, then validate the task");
+        fourthTask.setRole(designerRole);
+
+        TaskModelDTO fifthTask = new TaskModelDTO();
+        fifthTask.setNum(4);
+        fifthTask.setTitle("Project review");
+        fifthTask.setInstructions("Run quality assurance phase");
+        fifthTask.setRole(support);
 
         List<TaskModelDTO> tasks = new ArrayList<>();
         tasks.add(firstTask);
         tasks.add(secondTask);
+        tasks.add(thirdTask);
+        tasks.add(fourthTask);
+        tasks.add(fifthTask);
 
         ActivityModelDTO firstActivity = new ActivityModelDTO();
         firstActivity.setStep(0);
         firstActivity.setTaskModels(tasks);
         firstActivity.setType(ActivityModelDTO.TypeEnum.SEQUENTIAL);
-        firstActivity.setLifeCycleState("First Step");
+        firstActivity.setLifeCycleState("Start project");
 
         List<ActivityModelDTO> activities = new ArrayList<>();
         activities.add(firstActivity);
@@ -449,6 +969,21 @@ public class SampleLoader {
         partTemplateCreationDTO.setMask("ENGINE-###");
         partTemplateCreationDTO.setAttributeTemplates(attributes);
         partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
+
+        partTemplateCreationDTO.setReference("DOOR");
+        partTemplateCreationDTO.setMask("DOOR-###");
+        partTemplateCreationDTO.setAttributeTemplates(attributes);
+        partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
+
+        partTemplateCreationDTO.setReference("WHEEL");
+        partTemplateCreationDTO.setMask("WHEEL-###");
+        partTemplateCreationDTO.setAttributeTemplates(attributes);
+        partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
+
+        partTemplateCreationDTO.setReference("AMORTIZER");
+        partTemplateCreationDTO.setMask("AMORTIZER-###");
+        partTemplateCreationDTO.setAttributeTemplates(attributes);
+        partTemplatesApi.createPartMasterTemplate(workspaceId, partTemplateCreationDTO);
     }
 
 
@@ -461,13 +996,26 @@ public class SampleLoader {
         part.setWorkspaceId(workspaceId);
         part.setDescription("Sample part create with sample loader");
 
+        //ACLS set up
+        ACLDTO aclDto = new ACLDTO();
+        aclDto.setGroupEntries(generateACLEntries_giveFullAccesGrp1AndGrp2());
+
+        //Workflow model creation
+        WorkflowModelDTO workflowModelDTO = new WorkspacesApi(client)
+                .getWorkflowModelInWorkspace(workspaceId, "My first workflow");
+        List<RoleMappingDTO> roleMappingDTOs = resolveDefaultRoles(workflowModelDTO);
+
+        //Parts creations
         part.setTemplateId("SEATS");
         part.setNumber("SEAT-010");
-        part.setName("front seat");
+        part.setName("Front seat");
+        part.setWorkflowModelId(workflowModelDTO.getId());
+        part.setRoleMapping(roleMappingDTOs);
+        part.setAcl(aclDto);
         PartRevisionDTO frontSeat = partsApi.createNewPart(workspaceId, part);
         addAttributes(partsApi, frontSeat);
         part.setNumber("SEAT-020");
-        part.setName("back seat");
+        part.setName("Back seat");
         PartRevisionDTO backSeat = partsApi.createNewPart(workspaceId, part);
         addAttributes(partsApi, backSeat);
 
@@ -480,10 +1028,10 @@ public class SampleLoader {
         part.setName("100cc engine");
         PartRevisionDTO engine100 = partsApi.createNewPart(workspaceId, part);
         addAttributes(partsApi, engine100);
-        // Create an assembly
 
+        // Create an assembly
         part.setNumber("CAR-001");
-        part.setName("A sample assembly");
+        part.setName("Car assembly");
         part.setTemplateId(null);
         PartRevisionDTO assembly = partsApi.createNewPart(workspaceId, part);
         PartIterationDTO lastIteration = LastIterationHelper.getLastIteration(assembly);
@@ -505,14 +1053,17 @@ public class SampleLoader {
         driverSeatLink.setComponent(seat);
         driverSeatLink.setAmount(1.0);
         driverSeatLink.setReferenceDescription("Driver seat");
+        driverSeatLink.setOptional(true);
 
         passengerSeatLink.setComponent(seat);
         passengerSeatLink.setAmount(1.0);
         passengerSeatLink.setReferenceDescription("Passenger seat");
+        passengerSeatLink.setOptional(true);
 
         engineLink.setComponent(engine);
         engineLink.setAmount(1.0);
         engineLink.setReferenceDescription("The engine of this car");
+        engineLink.setOptional(true);
 
         links.add(driverSeatLink);
         links.add(passengerSeatLink);
@@ -530,7 +1081,7 @@ public class SampleLoader {
         passengerSeatCadInstance.setRx(0.0);
         passengerSeatCadInstance.setRy(0.0);
         passengerSeatCadInstance.setRz(0.0);
-        passengerSeatCadInstance.setTx(20.0);
+        passengerSeatCadInstance.setTx(0.0);
         passengerSeatCadInstance.setTy(0.0);
         passengerSeatCadInstance.setTz(0.0);
 
@@ -540,7 +1091,7 @@ public class SampleLoader {
         engineCadInstance.setRz(0.0);
         engineCadInstance.setTx(0.0);
         engineCadInstance.setTy(0.0);
-        engineCadInstance.setTz(50.0);
+        engineCadInstance.setTz(0.0);
 
         List<CADInstanceDTO> driverSeatCadInstances = new ArrayList<>();
         driverSeatCadInstances.add(driverSeatCadInstance);
@@ -652,5 +1203,411 @@ public class SampleLoader {
 
         productInstance.setBaselineId(firstBaselineFound.getId());
         new ProductInstancesApi(client).createProductInstanceMaster(workspaceId, productInstance);
+    }
+
+
+    //inspired by test which located here :  com.docdoku.api.ProductApiTest
+    private void createDoorProduct() throws ApiException, IOException, InterruptedException {
+
+        LOGGER.log(Level.INFO, "Creating the door Product ...");
+        PartsApi partsApi = new PartsApi(client);
+        PartApi partApi = new PartApi(client);
+        ProductsApi productsApi = new ProductsApi(client);
+        String[] partsNumber =  {"DOOR-001","WHEEL-001","AMORTIZER-001"};
+
+        //ACLS set up
+
+        ACLDTO aclDto = new ACLDTO();
+        aclDto.setGroupEntries(generateACLEntries_giveFullAccesGrp1AndGrp2());
+
+        //Workflow model creation
+
+        WorkflowModelDTO workflowModelDTO = new WorkspacesApi(client)
+                .getWorkflowModelInWorkspace(workspaceId, "Workflow-door-creation");
+        List<RoleMappingDTO> roleMappingDTOs = resolveDefaultRoles(workflowModelDTO);
+
+        //Create Parts for door structure
+        PartCreationDTO partCreationDTO = new PartCreationDTO();
+        List<String> useOptionalLinks =  new ArrayList<>();
+
+        partCreationDTO.setTemplateId("DOOR");
+        partCreationDTO.setNumber(partsNumber[0]);
+        partCreationDTO.setName("Door part");
+        partCreationDTO.setVersion("A");
+        partCreationDTO.setWorkflowModelId(workflowModelDTO.getId());
+        partCreationDTO.setRoleMapping(roleMappingDTOs);
+        partCreationDTO.setAcl(aclDto);
+
+        PartRevisionDTO leftDoor =  partsApi.createNewPart(workspaceId,partCreationDTO);
+        addAttributes(partsApi,leftDoor);
+
+        partCreationDTO.setTemplateId("WHEEL");
+        partCreationDTO.setName("Wheel part");
+        partCreationDTO.setNumber(partsNumber[1]);
+        partCreationDTO.setDescription("Left front wheel");
+
+        PartRevisionDTO leftWindow =  partsApi.createNewPart(workspaceId,partCreationDTO);
+        addAttributes(partsApi,leftWindow);
+
+        partCreationDTO.setTemplateId("AMORTIZER");
+        partCreationDTO.setName("Amortizer part");
+        partCreationDTO.setNumber(partsNumber[2]);
+        partCreationDTO.setDescription("Left front amortizer");
+
+        PartRevisionDTO leftLock =  partsApi.createNewPart(workspaceId,partCreationDTO);
+        addAttributes(partsApi,leftLock);
+
+        //Create structure product
+        // 1 - DOOR
+        //     1.1 - LOCK
+        //     1.2 - WINDOW
+
+        PartRevisionDTO doorRevisionDto =  partApi.getPartRevision(workspaceId,partsNumber[0],"A");
+        PartIterationDTO doorIterationDto = LastIterationHelper.getLastIteration(doorRevisionDto);
+
+        List<PartUsageLinkDTO> components =  new ArrayList<>();
+        PartUsageLinkDTO windowLeftLink =  new PartUsageLinkDTO();
+
+        ComponentDTO windowLeftComponent = new ComponentDTO();
+        windowLeftComponent.setNumber(partsNumber[1]);
+        windowLeftComponent.setAmount(1.0);
+        windowLeftComponent.setVersion("A");
+        windowLeftComponent.setPartUsageLinkReferenceDescription("left front wheel");
+        windowLeftComponent.setDescription("left front wheel");
+        windowLeftLink.setComponent(windowLeftComponent);
+        windowLeftLink.setReferenceDescription("Left front wheel");
+        windowLeftLink.setAmount(1.0);
+        windowLeftLink.setOptional(true);
+
+        ComponentDTO windowRightComponent = new ComponentDTO();
+        PartUsageLinkDTO windowRightLink =  new PartUsageLinkDTO();
+        windowRightComponent.setNumber(partsNumber[1]);
+        windowRightComponent.setAmount(1.0);
+        windowRightComponent.setVersion("A");
+        windowRightComponent.setPartUsageLinkReferenceDescription("Right front wheel");
+        windowLeftComponent.setDescription("Right front wheel");
+        windowRightLink.setComponent(windowLeftComponent);
+        windowRightLink.setAmount(1.0);
+        windowRightLink.setReferenceDescription("Right front wheel");
+        windowRightLink.setOptional(true);
+
+        PartUsageLinkDTO lockLeftLink =  new PartUsageLinkDTO();
+        ComponentDTO lockLeftComponent = new ComponentDTO();
+
+        lockLeftComponent.setNumber(partsNumber[2]);
+        lockLeftComponent.setAmount(1.0);
+        lockLeftComponent.setVersion("A");
+        lockLeftComponent.setPartUsageLinkReferenceDescription("Left front amortizer");
+        lockLeftLink.setAmount(1.0);
+        lockLeftLink.setComponent(lockLeftComponent);
+        lockLeftLink.setOptional(true);
+        lockLeftLink.setReferenceDescription("Left front amortizer");
+
+        PartUsageLinkDTO lockRightLink =  new PartUsageLinkDTO();
+        ComponentDTO lockRightComponent = new ComponentDTO();
+
+        lockRightComponent.setNumber(partsNumber[2]);
+        lockRightComponent.setAmount(1.0);
+        lockRightComponent.setVersion("A");
+        lockRightComponent.setPartUsageLinkReferenceDescription("Right front amortizer");
+        lockRightLink.setAmount(1.0);
+        lockRightLink.setComponent(lockRightComponent);
+        lockRightLink.setOptional(true);
+        lockRightLink.setReferenceDescription("Right front amortizer");
+
+
+        CADInstanceDTO windowsCadInstance = new CADInstanceDTO();
+        windowsCadInstance.setRx(0.0);
+        windowsCadInstance.setRy(0.0);
+        windowsCadInstance.setRz(0.0);
+        windowsCadInstance.setTx(20.0);
+        windowsCadInstance.setTy(0.0);
+        windowsCadInstance.setTz(0.0);
+
+        CADInstanceDTO lockCadInstance = new CADInstanceDTO();
+        lockCadInstance.setRx(0.0);
+        lockCadInstance.setRy(0.0);
+        lockCadInstance.setRz(0.0);
+        lockCadInstance.setTx(0.0);
+        lockCadInstance.setTy(0.0);
+        lockCadInstance.setTz(-50.0);
+
+        List<CADInstanceDTO> windowsCadInstances = new ArrayList<>();
+        windowsCadInstances.add(windowsCadInstance);
+        windowLeftLink.setCadInstances(windowsCadInstances);
+        windowRightLink.setCadInstances(windowsCadInstances);
+
+        List<CADInstanceDTO> lockCadInstances = new ArrayList<>();
+        lockCadInstances.add(lockCadInstance);
+        lockLeftLink.setCadInstances(lockCadInstances);
+        lockRightLink.setCadInstances(lockCadInstances);
+
+        components.add(windowLeftLink);
+        components.add(windowRightLink);
+        components.add(lockLeftLink);
+        components.add(lockRightLink);
+
+        doorIterationDto.setComponents(components);
+        partApi.updatePartIteration(workspaceId,partsNumber[0],"A",1,doorIterationDto);
+
+        LOGGER.log(Level.INFO, "Uploading 3D files...");
+
+        doorIterationDto.setNumber(partsNumber[1]);
+        uploadNativeCADFile(doorIterationDto, client, SampleLoaderUtils.getFile("BassBoat-TrollingMotor.obj"));
+        uploadAttachedFile(doorIterationDto, client, SampleLoaderUtils.getFile("BassBoat-FrontSeat.mtl"));
+
+        doorIterationDto.setNumber(partsNumber[2]);
+        uploadNativeCADFile(doorIterationDto, client, SampleLoaderUtils.getFile("BassBoat-OutboardMotor.obj"));
+        uploadAttachedFile(doorIterationDto, client, SampleLoaderUtils.getFile("BassBoat-BackSeat.mtl"));
+
+        for(String s : partsNumber){
+
+            partApi.checkIn(workspaceId,s,"A");
+        }
+
+        //Create the product
+        ConfigurationItemDTO product = new ConfigurationItemDTO();
+        product.setId(partsNumber[0]);
+        product.setDesignItemNumber(partsNumber[0]);
+        product.setDescription("Generated from sample data for test");
+        product.setWorkspaceId(workspaceId);
+
+        productsApi.createConfigurationItem(workspaceId,product);
+
+        doorRevisionDto  = partApi.getPartRevision(workspaceId,partsNumber[0],"A");
+        doorIterationDto = LastIterationHelper.getLastIteration(doorRevisionDto);
+
+        //Create the baseline
+        ProductBaselineDTO baseline =  new ProductBaselineDTO();
+        baseline.setType(ProductBaselineDTO.TypeEnum.LATEST);
+        baseline.setName("DOOR-BASELINE");
+        baseline.setConfigurationItemId(product.getId());
+
+        for(PartUsageLinkDTO puldto : doorIterationDto.getComponents() ){
+
+            useOptionalLinks.add("-1-" + puldto.getFullId());
+        }
+        baseline.setOptionalUsageLinks(useOptionalLinks);
+        baseline.setSubstituteLinks(useOptionalLinks);
+
+        ComponentDTO structure = productsApi.filterProductStructure(workspaceId,
+                product.getId(), "wip", "-1", -1, null, true);
+
+        List<ComponentDTO> structureComponents = structure.getComponents();
+
+        //Create a typed links
+        LightPathToPathLinkDTO link = new LightPathToPathLinkDTO();
+        link.setType("Mechanical");
+        link.setDescription("a typed link created from sample data");
+        link.setSourcePath(structureComponents.get(0).getPath());
+        link.setTargetPath(structureComponents.get(1).getPath());
+        productsApi.createPathToPathLink(workspaceId, product.getId(), link);
+        baseline.setPathToPathLinks(product.getPathToPathLinks());
+
+        new ProductBaselineApi(client).createProductBaseline(workspaceId,baseline);
+        LOGGER.log(Level.INFO, "Waiting for conversion...");
+        Thread.sleep(5000);
+    }
+
+    private void createConfiguration() throws ApiException {
+
+        LOGGER.log(Level.INFO, "Creating configuration ...");
+        ProductConfigurationsApi productConfigurationsApi = new ProductConfigurationsApi(client);
+
+        List<String> useOptionalLinks =  new ArrayList<>();
+        ACLDTO aclDto = new ACLDTO();
+        aclDto.setGroupEntries(generateACLEntries_FullAccesForGroupContainAdminWks());
+
+        PartRevisionDTO doorRevisionDto =  new PartApi(client).getPartRevision(workspaceId,"DOOR-001","A");
+        PartIterationDTO doorIterationDto = LastIterationHelper.getLastIteration(doorRevisionDto);
+
+        for(PartUsageLinkDTO puldto : doorIterationDto.getComponents() ){
+
+            useOptionalLinks.add("-1-"+puldto.getFullId());
+        }
+
+        ProductConfigurationDTO productConfigurationDTO = new ProductConfigurationDTO();
+        productConfigurationDTO.setName("cfg-001");
+        productConfigurationDTO.setConfigurationItemId("DOOR-001");
+        productConfigurationDTO.setDescription("configuration created from sample");
+        productConfigurationDTO.setOptionalUsageLinks(useOptionalLinks);
+        productConfigurationDTO.setAcl(aclDto);
+        productConfigurationsApi.createConfiguration(workspaceId,productConfigurationDTO);
+    }
+
+
+    private void createRolesAndWorkflowForDoorProduct() throws ApiException {
+
+        LOGGER.log(Level.INFO, "Creating roles for door product ...");
+        RolesApi rolesApi = new RolesApi(client);
+        List<UserGroupDTO> groupsAvailable=  new WorkspacesApi(client).getGroups(workspaceId);
+
+        List<UserGroupDTO> tmpArrays =  new ArrayList<>();
+        tmpArrays.add(groupsAvailable.get(1));
+        tmpArrays.add(groupsAvailable.get(2));
+
+        RoleDTO roleGroupDTO = new RoleDTO();
+        roleGroupDTO.setWorkspaceId(workspaceId);
+        roleGroupDTO.setName("Assembly engineers");
+        roleGroupDTO.setDefaultAssignedGroups(tmpArrays);
+        RoleDTO engineers = rolesApi.createRole(workspaceId,roleGroupDTO);
+
+        // Workflow
+        LOGGER.log(Level.INFO, "Setting workflow ...");
+
+        TaskModelDTO firstTask = new TaskModelDTO();
+        firstTask.setNum(0);
+        firstTask.setTitle("design door prototype");
+        firstTask.setInstructions("Create door's design");
+        firstTask.setRole(engineers);
+
+        TaskModelDTO secondTask = new TaskModelDTO();
+        secondTask.setNum(1);
+        secondTask.setTitle("Build door prototype");
+        secondTask.setInstructions("Build the prototype");
+        secondTask.setRole(engineers);
+
+        List<TaskModelDTO> tasks = new ArrayList<>();
+        tasks.add(firstTask);
+        tasks.add(secondTask);
+
+        ActivityModelDTO firstActivity = new ActivityModelDTO();
+        firstActivity.setStep(0);
+        firstActivity.setTaskModels(tasks);
+        firstActivity.setType(ActivityModelDTO.TypeEnum.SEQUENTIAL);
+        firstActivity.setLifeCycleState("Build Door");
+
+        List<TaskModelDTO> tasks2 = new ArrayList<>();
+
+        TaskModelDTO fourthTask = new TaskModelDTO();
+        fourthTask.setNum(0);
+        fourthTask.setTitle("Build lock ");
+        fourthTask.setInstructions("build a lock");
+        fourthTask.setRole(engineers);
+
+        TaskModelDTO fifthTask = new TaskModelDTO();
+        fifthTask.setNum(1);
+        fifthTask.setTitle("Build window");
+        fifthTask.setInstructions("Build window");
+        fifthTask.setRole(engineers);
+
+        tasks2.add(fourthTask);
+        tasks2.add(fifthTask);
+
+        ActivityModelDTO secondActivity = new ActivityModelDTO();
+        secondActivity.setStep(1);
+        secondActivity.setTaskModels(tasks2);
+        secondActivity.setType(ActivityModelDTO.TypeEnum.PARALLEL);
+        secondActivity.setLifeCycleState("Designing lock and door");
+        secondActivity.setTasksToComplete(0);
+
+        List<ActivityModelDTO> activities = new ArrayList<>();
+        activities.add(firstActivity);
+        activities.add(secondActivity);
+
+        LOGGER.log(Level.INFO, "Creating workflow ...");
+        WorkflowModelDTO workflowModelDTO = new WorkflowModelDTO();
+        workflowModelDTO.setActivityModels(activities);
+        workflowModelDTO.setReference("Workflow-door-creation");
+        workflowModelDTO.setFinalLifeCycleState("Terminated");
+        workflowModelDTO.setId("Workflow-door-creation");
+
+        new WorkflowModelsApi(client).createWorkflowModel(workspaceId, workflowModelDTO);
+    }
+
+    //take from test : com.docdoku.api.WorkflowApiTest
+    private List<RoleMappingDTO> resolveDefaultRoles(WorkflowModelDTO workflowModel) {
+        Set<RoleDTO> rolesInvolved = WorkflowHelper.getRolesInvolved(workflowModel);
+        List<RoleMappingDTO> roleMapping = new ArrayList<>();
+
+        // we need to resolve the roles (use defaults assignments)
+        for (RoleDTO role : rolesInvolved) {
+
+            RoleMappingDTO roleMappingDTO = new RoleMappingDTO();
+            roleMappingDTO.setRoleName(role.getName());
+
+            for (UserGroupDTO group : role.getDefaultAssignedGroups()) {
+
+                roleMappingDTO.getGroupIds().add(group.getId());
+            }
+            for (UserDTO user : role.getDefaultAssignedUsers()) {
+                roleMappingDTO.getUserLogins().add(user.getLogin());
+            }
+            roleMapping.add(roleMappingDTO);
+        }
+
+        return roleMapping;
+    }
+
+    private void checkoutParts() throws ApiException {
+
+        LOGGER.log(Level.INFO, "Doing checkout on some parts and documents...");
+        PartApi partApi = new PartApi(client);
+        partApi.checkOut(workspaceId,"DOOR-001","A");
+        partApi.checkOut(workspaceId,"WHEEL-001","A");
+        partApi.checkOut(workspaceId,"AMORTIZER-001","A");
+
+        ApiClient joe = DocDokuPLMClientFactory.createJWTClient(url, "joe", "test");
+        partApi.setApiClient(joe);
+
+        partApi.checkOut(workspaceId,"CAR-001","A");
+        partApi.checkOut(workspaceId,"ENGINE-100","A");
+
+        ApiClient rob = DocDokuPLMClientFactory.createJWTClient(url, "rob", "test");
+        partApi.setApiClient(rob);
+        partApi.checkOut(workspaceId,"ENGINE-050","A");
+        partApi.checkOut(workspaceId,"SEAT-010","A");
+
+        ApiClient steve = DocDokuPLMClientFactory.createJWTClient(url, "steve", "test");
+        partApi.setApiClient(steve);
+        partApi.checkOut(workspaceId,"SEAT-020","A");
+
+        DocumentApi documentApi = new DocumentApi(client);
+        documentApi.checkOutDocument(workspaceId,"USER-MAN-001","A");
+        documentApi.checkOutDocument(workspaceId,"INVOICE-002","A");
+        documentApi.checkOutDocument(workspaceId,"INVOICE-001","A");
+
+        documentApi.setApiClient(joe);
+        documentApi.checkOutDocument(workspaceId,"API-001","A");
+
+        ApiClient bill = DocDokuPLMClientFactory.createJWTClient(url, "bill", "test");
+        documentApi.setApiClient(bill);
+        documentApi.checkOutDocument(workspaceId,"LETTER-001","A");
+        documentApi.checkOutDocument(workspaceId,"LETTER-002","A");
+    }
+
+    private void createOrganization() throws ApiException {
+
+        LOGGER.log(Level.INFO, "Creating organization for "+login+"...");
+        OrganizationsApi organizationsApi = new OrganizationsApi(client);
+        OrganizationDTO organizationDTO = organizationsApi.getOrganization();
+        if(organizationDTO != null){
+
+            if(!login.equals(organizationDTO.getOwner())) {
+
+                LOGGER.log(Level.INFO, "You are member of an existing organization. Cannot create yours.");
+                return;
+            }
+            organizationsApi.deleteOrganization();
+        }
+
+        //create the organization
+        organizationDTO = new OrganizationDTO();
+        organizationDTO.setName("organization-" + UUID.randomUUID().toString().substring(0,8));
+        organizationDTO.setDescription("Organization created from sample");
+        organizationDTO.setOwner(login);
+        organizationsApi.createOrganization(organizationDTO);
+        //add members
+        LOGGER.log(Level.INFO, "add members to organization...");
+        UserDTO userDTO = new UserDTO();
+        int limit = 0;
+        for (String user : logins) {
+
+            userDTO.setName(user);
+            userDTO.setLogin(user);
+            organizationsApi.addMember(userDTO);
+            if (limit == 2) break;
+            limit++;
+        }
     }
 }
