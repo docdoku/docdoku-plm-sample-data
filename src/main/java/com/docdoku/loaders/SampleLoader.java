@@ -67,7 +67,6 @@ public class SampleLoader {
         this.workspaceId = workspaceId;
         this.url = url;
         guestClient = DocDokuPLMClientFactory.createClient(url);
-        client = DocDokuPLMClientFactory.createJWTClient(url, login, password);
     }
 
     public void load() throws ApiException, IOException, InterruptedException {
@@ -82,7 +81,10 @@ public class SampleLoader {
             LOGGER.log(Level.INFO, "Cannot create account, trying to use given credentials for next operations");
         }
 
+        client = DocDokuPLMClientFactory.createJWTClient(url, login, password);
+
         createWorkspace();
+        addUserToWorkspace(login);
         createOtherAccounts();
         createGroups();
         setAccessPermissionForGroups();
@@ -291,7 +293,6 @@ public class SampleLoader {
         accountDTO.setLogin(accountLogin);
         accountDTO.setNewPassword(password);
         new AccountsApi(guestClient).createAccount(accountDTO);
-        addUserToWorkspace(login);
 
     }
 
@@ -1592,7 +1593,7 @@ public class SampleLoader {
 
         //create the organization
         organizationDTO = new OrganizationDTO();
-        organizationDTO.setName("Organization Test");
+        organizationDTO.setName("organization-" + UUID.randomUUID().toString().substring(0,8));
         organizationDTO.setDescription("Organization created from sample");
         organizationDTO.setOwner(login);
         organizationsApi.createOrganization(organizationDTO);
