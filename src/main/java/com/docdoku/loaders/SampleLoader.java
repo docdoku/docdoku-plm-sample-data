@@ -1278,15 +1278,14 @@ public class SampleLoader {
 
     private void createBaseline() throws ApiException {
         ProductBaselineApi productBaselineApi = new ProductBaselineApi(client);
-        ProductBaselineDTO baseline = new ProductBaselineDTO();
+        ProductBaselineCreationDTO baseline = new ProductBaselineCreationDTO();
         baseline.setConfigurationItemId("CAR-001");
 
         baseline.setName("Basic");
-        baseline.setType(ProductBaselineDTO.TypeEnum.RELEASED);
-        productBaselineApi.createProductBaseline(workspaceId, baseline);
-
+        baseline.setType(ProductBaselineCreationDTO.TypeEnum.RELEASED);
+        productBaselineApi.createProductBaseline(workspaceId, baseline, false);
         baseline.setName("Medium");
-        baseline.setType(ProductBaselineDTO.TypeEnum.RELEASED);
+        baseline.setType(ProductBaselineCreationDTO.TypeEnum.RELEASED);
 
         List<String> links = new ArrayList<>();
 
@@ -1302,7 +1301,7 @@ public class SampleLoader {
 
         baseline.setOptionalUsageLinks(links);
 
-        productBaselineApi.createProductBaseline(workspaceId, baseline);
+        productBaselineApi.createProductBaseline(workspaceId, baseline, false);
     }
 
     private void createProductInstance() throws ApiException {
@@ -1523,8 +1522,8 @@ public class SampleLoader {
         doorIterationDto = LastIterationHelper.getLastIteration(doorRevisionDto);
 
         //Create the baseline
-        ProductBaselineDTO baseline = new ProductBaselineDTO();
-        baseline.setType(ProductBaselineDTO.TypeEnum.LATEST);
+        ProductBaselineCreationDTO baseline = new ProductBaselineCreationDTO();
+        baseline.setType(ProductBaselineCreationDTO.TypeEnum.LATEST);
         baseline.setName("DOOR-BASELINE");
         baseline.setConfigurationItemId(product.getId());
 
@@ -1547,9 +1546,8 @@ public class SampleLoader {
         link.setSourcePath(structureComponents.get(0).getPath());
         link.setTargetPath(structureComponents.get(1).getPath());
         productsApi.createPathToPathLink(workspaceId, product.getId(), link);
-        baseline.setPathToPathLinks(product.getPathToPathLinks());
 
-        new ProductBaselineApi(client).createProductBaseline(workspaceId, baseline);
+        new ProductBaselineApi(client).createProductBaseline(workspaceId, baseline, false);
     }
 
     private void createRolesAndWorkflowForDoorProduct() throws ApiException {
