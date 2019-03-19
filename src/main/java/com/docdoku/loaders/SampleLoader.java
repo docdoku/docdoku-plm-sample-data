@@ -1661,18 +1661,18 @@ public class SampleLoader {
         partApi.checkOut(workspaceId, "WHEEL-001", "A");
         partApi.checkOut(workspaceId, "AMORTIZER-001", "A");
 
-        ApiClient joe = DocDokuPLMClientFactory.createJWTClient(url, "joe", "test");
+        ApiClient joe = DocDokuPLMClientFactory.createJWTClient(url, "joe", password);
         partApi.setApiClient(joe);
 
         partApi.checkOut(workspaceId, "CAR-001", "C");
         partApi.checkOut(workspaceId, "ENGINE-100", "C");
 
-        ApiClient rob = DocDokuPLMClientFactory.createJWTClient(url, "rob", "test");
+        ApiClient rob = DocDokuPLMClientFactory.createJWTClient(url, "rob", password);
         partApi.setApiClient(rob);
         partApi.checkOut(workspaceId, "ENGINE-050", "C");
         partApi.checkOut(workspaceId, "SEAT-010", "C");
 
-        ApiClient steve = DocDokuPLMClientFactory.createJWTClient(url, "steve", "test");
+        ApiClient steve = DocDokuPLMClientFactory.createJWTClient(url, "steve", password;
         partApi.setApiClient(steve);
         partApi.checkOut(workspaceId, "SEAT-020", "C");
 
@@ -1684,7 +1684,7 @@ public class SampleLoader {
         documentApi.setApiClient(joe);
         documentApi.checkOutDocument(workspaceId, "API-001", "A");
 
-        ApiClient bill = DocDokuPLMClientFactory.createJWTClient(url, "bill", "test");
+        ApiClient bill = DocDokuPLMClientFactory.createJWTClient(url, "bill", password);
         documentApi.setApiClient(bill);
         documentApi.checkOutDocument(workspaceId, "LETTER-001", "A");
         documentApi.checkOutDocument(workspaceId, "LETTER-002", "A");
