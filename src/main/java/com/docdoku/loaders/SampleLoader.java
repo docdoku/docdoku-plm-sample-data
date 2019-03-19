@@ -1672,7 +1672,7 @@ public class SampleLoader {
         partApi.checkOut(workspaceId, "ENGINE-050", "C");
         partApi.checkOut(workspaceId, "SEAT-010", "C");
 
-        ApiClient steve = DocDokuPLMClientFactory.createJWTClient(url, "steve", password;
+        ApiClient steve = DocDokuPLMClientFactory.createJWTClient(url, "steve", password);
         partApi.setApiClient(steve);
         partApi.checkOut(workspaceId, "SEAT-020", "C");
 
