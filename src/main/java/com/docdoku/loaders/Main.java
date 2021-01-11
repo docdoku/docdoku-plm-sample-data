@@ -20,7 +20,7 @@
 
 package com.docdoku.loaders;
 
-import com.docdoku.api.client.ApiException;
+import com.docdoku.plm.api.client.ApiException;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 

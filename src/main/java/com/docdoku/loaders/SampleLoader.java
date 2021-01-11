@@ -20,14 +20,14 @@
 
 package com.docdoku.loaders;
 
-import com.docdoku.api.DocDokuPLMClientFactory;
-import com.docdoku.api.client.ApiClient;
-import com.docdoku.api.client.ApiException;
-import com.docdoku.api.models.*;
-import com.docdoku.api.models.utils.AttributesHelper;
-import com.docdoku.api.models.utils.LastIterationHelper;
-import com.docdoku.api.models.utils.WorkflowHelper;
-import com.docdoku.api.services.*;
+import com.docdoku.plm.api.DocDokuPLMClientFactory;
+import com.docdoku.plm.api.client.ApiClient;
+import com.docdoku.plm.api.client.ApiException;
+import com.docdoku.plm.api.models.*;
+import com.docdoku.plm.api.models.utils.AttributesHelper;
+import com.docdoku.plm.api.models.utils.LastIterationHelper;
+import com.docdoku.plm.api.models.utils.WorkflowHelper;
+import com.docdoku.plm.api.services.*;
 
 import java.io.File;
 import java.io.IOException;
