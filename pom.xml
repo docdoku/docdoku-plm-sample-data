@@ -6,7 +6,7 @@
 
     <groupId>com.docdoku.plm</groupId>
     <artifactId>docdoku-plm-sample-data</artifactId>
-    <version>2.6.1-SNAPSHOT</version>
+    <version>2.6.2</version>
     <packaging>jar</packaging>
     <name>docdoku-plm-sample-data Java Sample Loader Client</name>
 
